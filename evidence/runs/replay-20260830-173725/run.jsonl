@@ -1,0 +1,14 @@
+{"t": 1788111445.085, "event": "run_started", "kind": "replay", "run_id": "replay-20260830-173725"}
+{"t": 1788111468.488, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788111468.488, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no"]}
+{"t": 1788111468.488, "event": "step_started", "index": 0, "intent": "type '{member_no}' into the field beside 'Member Number'", "action": "type", "risk": "sensitive"}
+{"t": 1788111469.239, "event": "target_resolved", "index": 0, "tier": "label", "detail": "text -> 'Member Number' @ 53,282"}
+{"t": 1788111469.41, "event": "step_started", "index": 1, "intent": "click 'Find'", "action": "click", "risk": "safe"}
+{"t": 1788111470.188, "event": "target_resolved", "index": 1, "tier": "label", "detail": "text -> 'Find' @ 688,287"}
+{"t": 1788111470.294, "event": "step_started", "index": 2, "intent": "click 'view'", "action": "click", "risk": "safe"}
+{"t": 1788111471.18, "event": "target_resolved", "index": 2, "tier": "label", "detail": "text -> 'view' @ 1430,439"}
+{"t": 1788111473.121, "event": "frame_captured", "file": "frames/001-step02.png", "label": "step02", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788111474.957, "event": "frame_captured", "file": "frames/002-final.png", "label": "final", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788111474.957, "event": "output_extracted", "name": "savings_balance", "value": "4,182.55"}
+{"t": 1788111474.957, "event": "replay_succeeded", "outputs": ["savings_balance"]}
+{"t": 1788111474.957, "event": "run_finished", "status": "success"}

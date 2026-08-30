@@ -1,0 +1,12 @@
+# The build context is the repo root, and without this it would ship the
+# virtualenv and the entire git history to the daemon on every build.
+.venv/
+.git/
+.claude/
+__pycache__/
+*.pyc
+.pytest_cache/
+evidence/runs/
+evidence/proxy.jsonl
+.env
+*.pdf

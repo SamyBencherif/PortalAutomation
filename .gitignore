@@ -6,3 +6,10 @@ c.txt
 
 # Assignment brief -- kept locally, not published
 *.pdf
+
+# Automation system
+.env
+docker/.env
+# evidence/runs/ is deliberately NOT ignored: the demonstration of the
+# end-to-end flow is a required deliverable, so the run logs and frames are
+# committed. Frames are redacted before they are written.

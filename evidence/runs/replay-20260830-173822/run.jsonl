@@ -1,0 +1,12 @@
+{"t": 1788111502.49, "event": "run_started", "kind": "replay", "run_id": "replay-20260830-173822"}
+{"t": 1788111525.876, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788111525.877, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no"]}
+{"t": 1788111525.877, "event": "step_started", "index": 0, "intent": "type '{member_no}' into the field beside 'Member Number'", "action": "type", "risk": "sensitive"}
+{"t": 1788111526.623, "event": "target_resolved", "index": 0, "tier": "label", "detail": "text -> 'Member Number' @ 53,282"}
+{"t": 1788111526.797, "event": "step_started", "index": 1, "intent": "click 'Find'", "action": "click", "risk": "safe"}
+{"t": 1788111527.576, "event": "target_resolved", "index": 1, "tier": "label", "detail": "text -> 'Find' @ 688,287"}
+{"t": 1788111527.682, "event": "step_started", "index": 2, "intent": "click 'view'", "action": "click", "risk": "safe"}
+{"t": 1788111528.56, "event": "target_resolved", "index": 2, "tier": "label", "detail": "text -> 'view' @ 1425,442"}
+{"t": 1788111530.295, "event": "frame_captured", "file": "frames/001-step02.png", "label": "step02", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788111530.296, "event": "business_outcome", "code": "PERMISSION_DENIED", "step": 2}
+{"t": 1788111530.296, "event": "run_finished", "status": "business_outcome"}

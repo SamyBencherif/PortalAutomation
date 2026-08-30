@@ -1,0 +1,18 @@
+# The automation system's own dependencies.
+#
+# Deliberately short. Notably absent:
+#   - no Playwright/Selenium: perception is screenshots and input is xdotool,
+#     because the next surface after this one has no DOM to drive.
+#   - no OpenCV: template matching is ~40 lines of numpy, and a bounded local
+#     search does not need a computer-vision framework.
+#   - no pytesseract: tesseract's TSV interface is stable and gives per-word
+#     boxes directly, so a subprocess call beats a binding.
+anthropic>=1.2
+pydantic>=2.9
+pillow>=10.0
+numpy>=1.26
+httpx>=0.27
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+pytest>=8.0

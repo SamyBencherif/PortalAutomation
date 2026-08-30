@@ -1,0 +1,261 @@
+{"t": 1788111191.459, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111191.463, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111191.471, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111191.622, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111191.623, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111196.511, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111196.516, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111196.526, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111196.565, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111201.177, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111201.186, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111201.189, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111202.186, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111202.197, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111202.198, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111202.203, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111202.245, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111221.816, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111221.82, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111221.83, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111221.98, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111221.984, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111226.86, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111226.864, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111226.873, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111226.913, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111231.542, "method": "GET", "url": "http://target:8800/members?memberNumber=99999&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111231.553, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111231.555, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111249.264, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111249.268, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111249.279, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111249.434, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111249.436, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111254.293, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111254.297, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111254.306, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111254.346, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111258.89, "method": "GET", "url": "http://target:8800/members?memberNumber=10003&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111258.899, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111258.901, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111259.9, "method": "GET", "url": "http://target:8800/members/10003", "host": "target", "path": "/members/10003", "allowed": true, "reason": "permitted"}
+{"t": 1788111259.909, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111259.912, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111277.456, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111277.46, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111277.47, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111277.623, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111277.624, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111282.575, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111282.579, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111282.587, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111282.628, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111287.289, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111287.298, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111287.3, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111289.641, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111290.257, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111290.259, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111291.417, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111291.679, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111291.68, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111291.935, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111291.977, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111293.727, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111293.989, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111293.989, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111294.246, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111294.287, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111314.107, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111314.111, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111314.121, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111314.271, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111314.273, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111319.14, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111319.143, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111319.151, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111319.192, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111323.723, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111323.732, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111323.734, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111340.993, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111372.648, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111372.654, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111372.664, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111372.813, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111372.813, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111377.786, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111377.791, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111377.801, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111377.837, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111396.192, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111396.197, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111396.209, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111396.362, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111396.371, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111396.374, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111402.985, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111402.995, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111402.998, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111411.365, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111411.373, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111411.375, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111411.38, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111411.424, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111460.705, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111460.709, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111460.719, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111460.868, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111460.872, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111465.632, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111465.636, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111465.644, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111465.685, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111470.198, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111470.207, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111470.209, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111471.189, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111471.197, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111471.198, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111471.204, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111471.247, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111471.322, "method": "CONNECT", "url": "android.clients.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111490.918, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111490.922, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111490.932, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111491.087, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111491.088, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111495.849, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111495.853, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111495.862, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111495.903, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111500.381, "method": "GET", "url": "http://target:8800/members?memberNumber=99999&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111500.389, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111500.392, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111514.708, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111518.128, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111518.132, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111518.141, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111518.291, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111518.292, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111523.048, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111523.052, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111523.061, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111523.102, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111527.598, "method": "GET", "url": "http://target:8800/members?memberNumber=10003&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111527.607, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111527.609, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111528.569, "method": "GET", "url": "http://target:8800/members/10003", "host": "target", "path": "/members/10003", "allowed": true, "reason": "permitted"}
+{"t": 1788111528.579, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111528.583, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111546.143, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111546.147, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111546.157, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111546.308, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111546.308, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111551.081, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111551.086, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111551.093, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111551.134, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111555.646, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111555.654, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111555.655, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111557.999, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111558.613, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111558.615, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111559.706, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111559.967, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111559.968, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111560.224, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111560.266, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111561.978, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111562.241, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111562.242, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788111562.499, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111562.541, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111582.332, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111582.337, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111582.346, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111582.496, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111582.5, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111587.278, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788111587.282, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111587.29, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111587.33, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111591.862, "method": "GET", "url": "http://target:8800/members?memberNumber=10001&lastName=&ctl00%24cph1%24btnFind=Find", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788111591.872, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111591.875, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788111674.809, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788111844.586, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112001.008, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112071.348, "method": "CONNECT", "url": "android.clients.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112171.706, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112340.347, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112409.104, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112409.107, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112409.114, "method": "GET", "url": "http://target:8800/static/legacy.css", "host": "target", "path": "/static/legacy.css", "allowed": true, "reason": "permitted"}
+{"t": 1788112409.118, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112409.39, "method": "GET", "url": "http://target:8800/admin/members/10001/close", "host": "target", "path": "/admin/members/10001/close", "allowed": false, "reason": "path '/admin/members/10001/close' matches deny rule '/admin'"}
+{"t": 1788112409.398, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112409.4, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112428.055, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112428.059, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112428.069, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112428.22, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112428.221, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112432.979, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112432.983, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788112433.035, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112433.036, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112453.008, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112453.012, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112453.021, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112453.171, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112453.171, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112457.91, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112457.913, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788112457.964, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112457.965, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112477.927, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112477.93, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112477.941, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112478.091, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112478.091, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112482.842, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112482.846, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788112482.897, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112482.898, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112515.868, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112518.806, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112518.809, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112518.819, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112519.091, "method": "GET", "url": "http://target:8800/admin/members/10001/close", "host": "target", "path": "/admin/members/10001/close", "allowed": false, "reason": "path '/admin/members/10001/close' matches deny rule '/admin'"}
+{"t": 1788112519.099, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112519.101, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112537.762, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112537.765, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112537.776, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112537.93, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112537.932, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112542.674, "method": "POST", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112542.678, "method": "GET", "url": "http://target:8800/members", "host": "target", "path": "/members", "allowed": true, "reason": "permitted"}
+{"t": 1788112542.686, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112542.727, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112561.101, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112561.105, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112561.114, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112561.308, "method": "GET", "url": "http://target:8800/members/10001", "host": "target", "path": "/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788112561.317, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112561.318, "method": "GET", "url": "http://target:8800/frame/members/10001", "host": "target", "path": "/frame/members/10001", "allowed": true, "reason": "permitted"}
+{"t": 1788112561.324, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112561.365, "method": "GET", "url": "http://target:8800/favicon.ico", "host": "target", "path": "/favicon.ico", "allowed": false, "reason": "path '/favicon.ico' is not on the allowlist"}
+{"t": 1788112579.979, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112579.984, "method": "GET", "url": "http://target:8800/login", "host": "target", "path": "/login", "allowed": true, "reason": "permitted"}
+{"t": 1788112579.994, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112580.079, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112580.135, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112580.144, "method": "CONNECT", "url": "www.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112667.938, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112671.355, "method": "CONNECT", "url": "android.clients.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788112830.726, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}

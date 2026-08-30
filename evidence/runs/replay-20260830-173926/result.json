@@ -1,0 +1,17 @@
+{
+  "status": "failed",
+  "capability": "member.read_savings_balance@1.0.0",
+  "run_id": "replay-20260830-173926",
+  "outputs": {},
+  "outcome": null,
+  "failure": {
+    "stage": "step 2",
+    "intent": "click 'view'",
+    "code": "SERVER_FAULT",
+    "observed": "The application faulted. The correlation id identifies the run in the vendor's logs.",
+    "kind": "app_fault"
+  },
+  "recovered": [],
+  "drift": [],
+  "steps_executed": 3
+}
