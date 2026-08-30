@@ -1,12 +1,17 @@
 # PortalAutomation
 
-A record-once / replay-many computer-use system for legacy bank back-office software —
-built on the premise that if you want to automate a *machine*, you should be driving a
-machine, not a browser tab.
+A **discover-once / replay-many** computer-use system for legacy bank back-office
+software — built on the premise that if you want to automate a *machine*, you should be
+driving a machine, not a browser tab.
 
-An LLM discovers how to drive the target from screenshots alone, the run is recorded as a
-typed capability artifact, and that artifact replays deterministically with no model in
-the loop. All three are working and evidenced in [`evidence/`](evidence/).
+The brief calls this shape *record-once / replay-many*, and the replay half is exactly
+that. The record half is not, and the difference is the point: **nobody demonstrates the
+flow.** There is no macro recorder and no human input capture anywhere in this system. An
+LLM is given a goal and a screen, works the UI out for itself, and what gets "recorded" is
+the agent's own successful run — reduced to a typed capability artifact.
+
+That artifact then replays deterministically with no model in the loop. All three halves
+are working and evidenced in [`evidence/`](evidence/).
 
 ---
 
