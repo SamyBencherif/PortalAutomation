@@ -6,3 +6,8 @@ c.txt
 
 # Assignment brief -- kept locally, not published
 *.pdf
+
+# Automation system
+.env
+evidence/runs/
+evidence/proxy.jsonl
