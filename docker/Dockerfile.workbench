@@ -1,0 +1,60 @@
+# The workbench: a real desktop the agent operates, isolated from the host.
+#
+# Everything the automation needs to have hands and eyes lives here -- an X
+# display, a window manager, a browser, screenshot and input tools -- plus
+# x11vnc and noVNC so a human can take over THAT display rather than a copy of
+# it. That last point is why this is a container with a desktop in it rather
+# than a headless browser: the handoff has to be to the same session.
+FROM python:3.12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    DISPLAY=:99 \
+    PYTHONUNBUFFERED=1
+
+# Verdana is not redistributable, so the target's `font-family: Verdana,
+# Geneva, sans-serif` resolves to DejaVu Sans here. That is a real difference
+# from a Windows operator's screen; it is also the sort of per-environment
+# rendering variation the label-anchored targeting exists to absorb, and OCR
+# reads DejaVu at least as well.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      xvfb \
+      x11vnc \
+      novnc \
+      websockify \
+      openbox \
+      chromium \
+      xdotool \
+      imagemagick \
+      tesseract-ocr \
+      tesseract-ocr-eng \
+      fonts-dejavu-core \
+      fonts-liberation \
+      procps \
+      curl \
+      ca-certificates \
+ && rm -rf /var/lib/apt/lists/*
+
+# ImageMagick ships a policy that refuses some operations. We only ever capture
+# the X root window to PNG, so permit exactly that and leave the rest alone.
+RUN set -eux; \
+    for f in /etc/ImageMagick-6/policy.xml /etc/ImageMagick-7/policy.xml; do \
+      if [ -f "$f" ]; then \
+        sed -i 's/rights="none" pattern="PNG"/rights="read|write" pattern="PNG"/' "$f"; \
+      fi; \
+    done
+
+WORKDIR /app
+COPY requirements-cua.txt /app/requirements-cua.txt
+RUN pip install --no-cache-dir -r /app/requirements-cua.txt
+
+COPY docker/workbench-entrypoint.sh /usr/local/bin/workbench-entrypoint
+RUN chmod +x /usr/local/bin/workbench-entrypoint
+
+# Source is bind-mounted in compose so edits are live; this copy is the
+# fallback for a standalone build.
+COPY cua /app/cua
+COPY capabilities /app/capabilities
+
+EXPOSE 5900 6080 8080
+ENTRYPOINT ["workbench-entrypoint"]
+CMD ["sleep", "infinity"]

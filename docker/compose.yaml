@@ -1,0 +1,52 @@
+# Two services, because the split mirrors the real thing: the bank application
+# is somewhere else, and the automation reaches it over a network it does not
+# control. Keeping them separate is also what makes the allowlist meaningful --
+# `target` is a distinct host that the workbench's proxy either lets through or
+# does not.
+services:
+
+  # The legacy application under automation. Stands in for a core banking
+  # screen; see mock_teller/README.md for the condition catalogue.
+  target:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.target
+    networks: [bank]
+    # Published only so a human can look at the app directly while debugging.
+    # The agent never uses this route; it goes through the proxy to `target`.
+    ports: ["8800:8800"]
+
+  # The desktop the agent operates, and that a human takes over.
+  workbench:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.workbench
+    depends_on: [target]
+    networks: [bank]
+    environment:
+      DISPLAY: ":99"
+      CUA_TARGET: "http://target:8800"
+      CUA_VNC_URL: "http://localhost:6080/vnc.html"
+      CUA_BROWSER_WINDOW: "Chromium"
+      # Supplied from a gitignored .env. Never written into an artifact or a
+      # run log -- see safety.policy.
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+    ports:
+      - "6080:6080"    # noVNC -- the operator's view of the agent's display
+      - "5900:5900"    # raw VNC, for a native client
+      - "8080:8080"    # operator console
+    volumes:
+      # Live source, and evidence/artifacts land on the host where they can be
+      # reviewed and committed.
+      - ../cua:/app/cua:ro
+      - ../capabilities:/app/capabilities
+      - ../evidence:/app/evidence
+    # Chromium needs more than the default 64MB of shared memory or it will
+    # crash in ways that look like flaky automation.
+    shm_size: "1gb"
+    stdin_open: true
+    tty: true
+
+networks:
+  bank:
+    driver: bridge
