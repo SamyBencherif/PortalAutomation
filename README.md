@@ -375,6 +375,10 @@ It needs the write flow — opening a sub-account, where the supervisor-override
 lives — whose capability has not been discovered yet. The mechanism is covered by
 `tests_cua/test_escalation.py`.
 
+What happens next, and what is deliberately not being built, is in
+**[ROADMAP.md](ROADMAP.md)**. `scripts/create_issues.py` mirrors it into the issue tracker
+so the two do not drift.
+
 ---
 
 ## Layout
