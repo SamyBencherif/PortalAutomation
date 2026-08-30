@@ -142,7 +142,18 @@ CORETELLER: tuple[Signature, ...] = (
     Signature(
         code="MAINTENANCE_INTERSTITIAL",
         klass=OutcomeClass.RECOVERABLE,
-        any_of=("scheduled maintenance notice",),
+        # "dismiss" is in here because of how this modal actually fails to be
+        # detected. Its shade darkens the page to 45% black, and that is enough
+        # to put the text beneath -- and even the notice's own heading -- below
+        # what OCR can read, while the Dismiss link, which renders above the
+        # shade, stays perfectly legible. Keying only on the heading meant the
+        # interstitial went unrecognised exactly when it was covering
+        # something, and the run failed its checkpoint against a page it could
+        # no longer see.
+        #
+        # A page being unreadable under a modal is correct, not a bug: a human
+        # cannot act on it either. The job is to notice the modal and clear it.
+        any_of=("scheduled maintenance notice", "will be unavailable", "dismiss"),
         message="A maintenance notice is covering the page.",
         recovery=Recovery.DISMISS_INTERSTITIAL,
     ),

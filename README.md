@@ -44,7 +44,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt -r requirements-cua.txt
 sudo apt-get install tesseract-ocr      # or: pacman -S tesseract tesseract-data-eng
 
-.venv/bin/python -m pytest tests/ tests_cua/ -q     # 121 tests, ~28s
+.venv/bin/python -m pytest tests/ tests_cua/ -q     # 91 automation + 30 target tests
 ```
 
 `tests/` covers the target application; `tests_cua/` covers the automation.
@@ -82,30 +82,37 @@ docker compose -f docker/compose.yaml exec workbench bash
 
 ```bash
 python -m cua.cli discover \
-  --goal "Sign on as teller1, look up member 10001, and read their savings balance" \
+  --goal "Look up member 10001 and read their current savings account balance." \
   --checkpoint "Account Positions" \
   --param member_no=10001 \
+  --output 'savings_balance:money:Savings:([0-9,]+\.[0-9]{2})' \
   --save member.read_savings_balance \
   --title "Read a member's savings balance" \
   --reset
 ```
 
-The model gets screenshots and a mouse, nothing else. On success this writes
-`capabilities/member.read_savings_balance@1.0.0.json` and prints any steps
-whose targeting could not be validated, for review before approval.
+The model gets screenshots and a mouse, nothing else — no DOM, no selectors, no
+hints about the app. It signs on *nothing*: the session is established first by
+the harness, because an automation agent should never handle credentials (see
+[`cua/bootstrap.py`](cua/bootstrap.py)).
+
+`--param` both parameterises the literal in the recorded steps and declares it
+in the contract; `--output` declares what the capability returns. On success
+this writes `capabilities/member.read_savings_balance@1.0.0.json` as a **draft**
+and prints any step whose targeting could not be validated, for review.
 
 ### 2. Replay — the production path, no model
 
 ```bash
 python -m cua.cli replay member.read_savings_balance@1.0.0 \
-  --param member_no=10001 --param operator=teller1 --param password=hunter2 --reset
+  --param member_no=10001 --reset
 ```
 
 ```
-[OK] member.read_savings_balance@1.0.0  (7 steps)
+[OK] member.read_savings_balance@1.0.0  (3 steps)
   outputs:
     savings_balance = 4,182.55
-  evidence: evidence/runs/replay-20260830-155559
+  evidence: evidence/runs/replay-20260830-173725
 ```
 
 That balance is inside an iframe. Screenshot perception never notices, because
@@ -115,34 +122,30 @@ pixels have no document tree.
 
 Each is a different *kind* of result, not a different error message:
 
-`CREDS` below is `--param operator=teller1 --param password=hunter2`.
-
 ```bash
 # A legitimate answer, not a failure.
-python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=99999 $CREDS --reset
+python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=99999 --reset
 #   [OUTCOME] RECORD_NOT_FOUND
 
 # A permission denial is also an answer.
-python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=10003 $CREDS --reset
+python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=10003 --reset
 #   [OUTCOME] PERMISSION_DENIED
 
 # Recoverable: transient 503s and maintenance interstitials, absorbed.
 python -m cua.cli replay member.read_savings_balance@1.0.0 \
-  --param member_no=10001 $CREDS --profile flaky --reset
+  --param member_no=10001 --profile flaky --reset
 #   [OK] ... recovered: 3x MAINTENANCE_INTERSTITIAL, 2x SERVICE_BUSY
 
 # A hard failure. `broken` faults the commit route, which the READ flow never
 # touches, so arm the search route instead:
-python -c "import httpx; httpx.post('http://target:8800/_control/scenario', \
-  json={'profile':'clean','overrides':{'error_500_on':['search']}}, \
-  headers={'content-type':'application/json'})"
-python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=10001 $CREDS
-#   [FAILED] SERVER_FAULT at step 3
+python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=10001 \
+  --reset --override '{"error_500_on":["search"]}'
+#   [FAILED] SERVER_FAULT at step 2
 
 # Stuck -> a human takes over the live session, then hands it back.
 # Needs the write-flow capability, which needs the discovery run first.
 python -m cua.cli replay member.open_subaccount@1.0.0 \
-  --param member_no=10005 $CREDS --allow-irreversible --operator-console --reset
+  --param member_no=10005 --allow-irreversible --operator-console --reset
 #   [ESCALATED] -> open http://localhost:8080, act in the embedded live view,
 #   click "Hand control back", and the run resumes on the same session.
 ```
@@ -201,11 +204,12 @@ evidence/       run logs, frames, proxy audit
   (tier 1), returns `savings_balance = 4,182.55`, and produces four distinct
   result kinds across five runs: success, two business outcomes, a success that
   absorbed five recoverable faults, and a hard failure at a named step.
-- **Not run: the LLM discovery run.** It needs an API key. The capability that
-  replays above was hand-authored against measured frames and is marked
-  `recorded_by: "human"`; it exists to exercise replay independently of the
-  model, and is not a stand-in for the discovery run the brief requires. The
-  escalation run depends on the write flow and so waits on the same step.
+- **Verified as a complete loop.** Claude Opus 5, given screenshots and a mouse
+  and nothing else, found the flow in 9 actions; the recorder turned that into
+  a 3-step artifact with every target a tier-1 label anchor; and that artifact
+  replays deterministically with no model. See [`evidence/`](evidence/).
+- **Not run: the escalation path end to end.** It needs the write flow, whose
+  capability has not been discovered yet. The mechanism is covered by tests.
 
 Three things were only true after measurement, and each changed the code:
 

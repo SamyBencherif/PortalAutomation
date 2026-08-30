@@ -23,8 +23,11 @@ from typing import Any
 
 import httpx
 
-from cua.artifact.schema import Approval
+from cua.artifact.schema import (
+    Approval, Extraction, Output, Param, ParamType, Relation, TextAnchor,
+)
 from cua.artifact.store import CapabilityNotFound, Store
+from cua.bootstrap import BootstrapError, sign_on
 from cua.escalation.broker import Broker
 from cua.escalation.console import serve_in_background
 from cua.evidence.run import RunLog
@@ -49,19 +52,71 @@ def _policy(args) -> Policy:
     return policy
 
 
+def _parse_output(spec: str) -> Output:
+    """`name:type:anchor:regex[:span]` -- what the capability returns.
+
+    Declared by a human rather than inferred from the goal text. What a
+    capability returns is part of its contract with the calling agent, and a
+    contract guessed from prose is not one worth relying on.
+    """
+    parts = spec.split(":")
+    if len(parts) < 4:
+        raise SystemExit(
+            f"--output {spec!r} must be name:type:anchor:regex[:span_px]"
+        )
+    name, type_, anchor_text, pattern = parts[0], parts[1], parts[2], parts[3]
+    span = int(parts[4]) if len(parts) > 4 else 1150
+    return Output(
+        name=name, type=ParamType(type_),
+        extract=Extraction(
+            anchor=TextAnchor(text=anchor_text, relation=Relation.RIGHT_OF),
+            span_px=span, pattern=pattern,
+        ),
+    )
+
+
 # --------------------------------------------------------------- harness ops
 
-def _control(path: str, payload: dict[str, Any] | None = None) -> Any:
+def _control(path: str, payload: dict[str, Any] | None = None,
+             cookies: dict[str, str] | None = None) -> Any:
     """Talk to the target's control plane. Harness-side only, never the agent."""
     url = f"{TARGET.rstrip('/')}/_control{path}"
     try:
         if payload is None:
             return httpx.get(url, timeout=5.0).json()
         r = httpx.post(url, json=payload, headers={"content-type": "application/json"},
-                       timeout=5.0)
+                       cookies=cookies or {}, timeout=5.0)
         return r.json() if r.status_code == 200 else {"error": r.status_code, "body": r.text}
     except httpx.HTTPError as e:
         return {"error": str(e)}
+
+
+def _browser_sid() -> str | None:
+    """The session id the BROWSER is using, per the target's own state."""
+    state = _control("/state")
+    for session in (state.get("sessions") or []):
+        if session.get("user"):
+            return session["sid"]
+    return None
+
+
+def _arm_scenario(profile: str, overrides: dict[str, Any] | None = None) -> Any:
+    """Arm a fault profile against the session the browser is actually using.
+
+    The target binds a scenario to the *caller's* cookie, and this harness
+    talks to it over httpx, which has none -- so a naive call mints a fresh
+    session and arms that one, leaving the browser untouched. It appeared to
+    work only because session ids are sequential: after a reset the browser's
+    stale `sess-0001` cookie sometimes collided with the newly minted one.
+    Reading the real session id and presenting it makes the intent explicit
+    instead of accidental.
+
+    Must therefore run AFTER sign-on, once the browser's session exists.
+    """
+    sid = _browser_sid()
+    cookies = {"CORETELLERSESSID": sid} if sid else None
+    return _control("/scenario", {"profile": profile, "overrides": overrides or {}},
+                    cookies=cookies)
 
 
 # ------------------------------------------------------------------ replay
@@ -80,13 +135,29 @@ def cmd_replay(args) -> int:
         # Between replay runs, so one run cannot inherit another's state.
         # This is what makes two runs comparable at all.
         _control("/reset", {})
-    if args.profile:
-        _control("/scenario", {"profile": args.profile})
 
     log = RunLog.create("replay", root=args.evidence)
+    surface = _surface()
+    if not args.no_login:
+        try:
+            sign_on(surface, f"{TARGET}/login", args.operator, args.password)
+            log.event("session_bootstrapped", operator=args.operator)
+        except BootstrapError as e:
+            print(f"could not establish a session: {e}", file=sys.stderr)
+            return 1
+
+    # Armed AFTER sign-on, so it binds to the browser's session rather than a
+    # throwaway one this process would otherwise mint.
+    if args.profile or args.override:
+        overrides = json.loads(args.override) if args.override else {}
+        armed = _arm_scenario(args.profile or "clean", overrides)
+        log.event("scenario_armed", profile=args.profile or "clean",
+                  overrides=overrides,
+                  session=armed.get("session") if isinstance(armed, dict) else None)
+
     broker = Broker(target_base=TARGET, vnc_url=VNC_URL, log=log)
     engine = ReplayEngine(
-        _surface(), _policy(args), log,
+        surface, _policy(args), log,
         credentials=(args.operator, args.password),
         escalate=broker.raise_intervention,
     )
@@ -161,8 +232,22 @@ def cmd_discover(args) -> int:
         _control("/reset", {})
 
     log = RunLog.create("discovery", root=args.evidence)
-    loop = AgentLoop(_surface(), log, model=args.model, max_steps=args.max_steps)
-    result = loop.run(args.goal, args.entry_url or f"{TARGET}/login")
+    surface = _surface()
+
+    # Authenticate before the model is involved. Credentials are a harness
+    # precondition, not something an agent should ever handle -- see
+    # cua/bootstrap.py for why that is a design decision and not a workaround.
+    start_url = args.entry_url or f"{TARGET}/{args.collection}"
+    if not args.no_login:
+        try:
+            sign_on(surface, f"{TARGET}/login", args.operator, args.password)
+            log.event("session_bootstrapped", operator=args.operator)
+        except BootstrapError as e:
+            print(f"could not establish a session: {e}", file=sys.stderr)
+            return 1
+
+    loop = AgentLoop(surface, log, model=args.model, max_steps=args.max_steps)
+    result = loop.run(args.goal, start_url)
 
     print(f"[{result.status}] {result.steps} actions -- {result.stop_reason}")
     if result.final_text:
@@ -175,13 +260,26 @@ def cmd_discover(args) -> int:
         print("  (not saved -- pass --save <capability.id> to record an artifact)")
         return 0
 
+    # A capability that uses {member_no} without declaring it is not
+    # invocable: replay validates inputs against the contract and would reject
+    # the very parameter the steps interpolate. The names come from --param,
+    # which is also what the recorder used to parameterise the literals.
+    declared = [
+        Param(name=name, type=ParamType.STRING, example=value)
+        for name, value in (p.split("=", 1) for p in args.param)
+    ]
+
+    outputs = [_parse_output(spec) for spec in args.output]
+
     cap = record(
         result,
+        params=declared,
+        outputs=outputs,
         cap_id=args.save,
         title=args.title or args.save,
         description=args.goal,
         app=AppRef(product="coreteller", version=args.app_version,
-                   tenant_variant=args.tenant, entry_url=args.entry_url or f"{TARGET}/login"),
+                   tenant_variant=args.tenant, entry_url=start_url),
         checkpoint=Checkpoint(kind="text_present", text=args.checkpoint),
         param_values=dict(p.split("=", 1) for p in args.param),
         model=args.model,
@@ -290,11 +388,19 @@ def build_parser() -> argparse.ArgumentParser:
     d.add_argument("--tenant", default="northstar")
     d.add_argument("--app-version", default="7.2.1")
     d.add_argument("--param", action="append", default=[],
-                   help="k=v used in this run, so it can be parameterised")
+                   help="k=v used in this run; parameterised AND declared")
+    d.add_argument("--output", action="append", default=[],
+                   help="name:type:anchor:regex[:span_px] the capability returns")
     d.add_argument("--model", default="claude-opus-5")
     d.add_argument("--max-steps", type=int, default=40)
     d.add_argument("--reset", action="store_true")
     d.add_argument("--overwrite", action="store_true")
+    d.add_argument("--collection", default="members",
+                   help="landing path after sign-on, e.g. members or pb/customers")
+    d.add_argument("--operator", default="teller1")
+    d.add_argument("--password", default="hunter2")
+    d.add_argument("--no-login", action="store_true",
+                   help="assume a session already exists")
     d.set_defaults(func=cmd_discover)
 
     r = sub.add_parser("replay", help="deterministic replay, no model in the loop")
@@ -303,10 +409,14 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--policy")
     r.add_argument("--allow-irreversible", action="store_true")
     r.add_argument("--profile", help="arm a target fault profile (harness-side)")
+    r.add_argument("--override",
+                   help='JSON knob overrides, e.g. \'{"error_500_on":["search"]}\'')
     r.add_argument("--reset", action="store_true",
                    help="reset target state first; required for comparable runs")
     r.add_argument("--operator", default="teller1")
     r.add_argument("--password", default="hunter2")
+    r.add_argument("--no-login", action="store_true",
+                   help="assume a session already exists")
     r.add_argument("--operator-console", action="store_true",
                    help="serve the takeover console and block on escalation")
     r.add_argument("--escalation-timeout", type=float, default=600.0)

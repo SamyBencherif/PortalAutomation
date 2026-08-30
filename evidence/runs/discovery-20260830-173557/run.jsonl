@@ -1,0 +1,18 @@
+{"t": 1788111357.256, "event": "run_started", "kind": "discovery", "run_id": "discovery-20260830-173557"}
+{"t": 1788111380.715, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788111380.722, "event": "discovery_started", "goal": "Look up member 10001 and read their current savings account balance.", "model": "claude-opus-5", "entry_url": "http://target:8800/members", "max_steps": 40}
+{"t": 1788111398.724, "event": "frame_captured", "file": "frames/001-discovery-start.png", "label": "discovery-start", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788111402.628, "event": "model_said", "text": "I'll start by searching for member 10001."}
+{"t": 1788111402.692, "event": "agent_action", "step": 1, "action": "left_click", "args": {"coordinate": [274, 293]}}
+{"t": 1788111402.863, "event": "agent_action", "step": 2, "action": "type", "args": {}}
+{"t": 1788111402.962, "event": "agent_action", "step": 3, "action": "left_click", "args": {"coordinate": [702, 293]}}
+{"t": 1788111403.135, "event": "agent_action", "step": 4, "action": "wait", "args": {"duration": 3}}
+{"t": 1788111406.205, "event": "agent_action", "step": 5, "action": "screenshot", "args": {}}
+{"t": 1788111411.29, "event": "model_said", "text": "One record found \u2014 Dana Reyes. Let me open the member's detail view."}
+{"t": 1788111411.356, "event": "agent_action", "step": 6, "action": "left_click", "args": {"coordinate": [1446, 445]}}
+{"t": 1788111411.532, "event": "agent_action", "step": 7, "action": "wait", "args": {"duration": 3}}
+{"t": 1788111414.603, "event": "agent_action", "step": 8, "action": "screenshot", "args": {}}
+{"t": 1788111419.647, "event": "agent_action", "step": 9, "action": "zoom", "args": {"region": [44, 380, 1560, 465]}}
+{"t": 1788111425.687, "event": "model_said", "text": "Member 10001 \u2014 **Dana Reyes** (DOB [REDACTED], Riverside branch).\n\n**Savings account SAV-10001-01 (Active, opened [REDACTED]): current balance 4,182.55**\n\nFor reference, the member's other account, checking CHK-10001-01, holds 1,043.19 \u2014 but the savings figure above is the one you asked for. No error banners or maintenance notices appeared during the lookup, and I made no changes to the record."}
+{"t": 1788111426.663, "event": "frame_captured", "file": "frames/002-discovery-final.png", "label": "discovery-final", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788111426.663, "event": "discovery_finished", "status": "succeeded", "steps": 9, "stop_reason": "end_turn"}

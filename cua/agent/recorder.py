@@ -302,7 +302,15 @@ def record(
             model=model,
             run_id=run_id,
             recorded_at=time.strftime("%Y-%m-%dT%H:%M:%S"),
-            notes=f"{result.steps} model actions; stop_reason={result.stop_reason!r}",
+            # If a refusal fallback served any turn, the run was not produced
+            # by the requested model alone and the record must say so. A
+            # provenance field that quietly overstates which model authored a
+            # capability is worse than no provenance field.
+            notes=(
+                f"{result.steps} model actions; stop_reason={result.stop_reason!r}"
+                + ("; one or more turns served by a refusal fallback model"
+                   if result.used_fallback else "")
+            ),
         ),
     )
 

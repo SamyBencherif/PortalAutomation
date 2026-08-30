@@ -1,0 +1,12 @@
+{"t": 1788111566.703, "event": "run_started", "kind": "replay", "run_id": "replay-20260830-173926"}
+{"t": 1788111590.129, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788111590.139, "event": "scenario_armed", "profile": "clean", "overrides": {"error_500_on": ["search"]}, "session": "sess-0001"}
+{"t": 1788111590.139, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no"]}
+{"t": 1788111590.139, "event": "step_started", "index": 0, "intent": "type '{member_no}' into the field beside 'Member Number'", "action": "type", "risk": "sensitive"}
+{"t": 1788111590.887, "event": "target_resolved", "index": 0, "tier": "label", "detail": "text -> 'Member Number' @ 53,282"}
+{"t": 1788111591.058, "event": "step_started", "index": 1, "intent": "click 'Find'", "action": "click", "risk": "safe"}
+{"t": 1788111591.836, "event": "target_resolved", "index": 1, "tier": "label", "detail": "text -> 'Find' @ 688,287"}
+{"t": 1788111591.942, "event": "step_started", "index": 2, "intent": "click 'view'", "action": "click", "risk": "safe"}
+{"t": 1788111593.719, "event": "frame_captured", "file": "frames/001-step02-server_fault.png", "label": "step02-server_fault", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788111593.719, "event": "hard_failure", "code": "SERVER_FAULT", "step": 2}
+{"t": 1788111593.719, "event": "run_finished", "status": "failed"}

@@ -1,0 +1,15 @@
+{
+  "status": "business_outcome",
+  "capability": "member.read_savings_balance@1.0.0",
+  "run_id": "replay-20260830-173755",
+  "outputs": {},
+  "outcome": {
+    "code": "RECORD_NOT_FOUND",
+    "class": "business",
+    "message": "No such record. The search succeeded and matched nothing."
+  },
+  "failure": null,
+  "recovered": [],
+  "drift": [],
+  "steps_executed": 3
+}

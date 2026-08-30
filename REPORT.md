@@ -239,14 +239,21 @@ wants per-capability, per-tenant authorisation with an approver identity.
   `__VIEWSTATE` token is the interesting one — it would *prove* replay drives
   the UI rather than forging HTTP requests.
 
-**Unfinished rather than cut**: the LLM discovery run, which the brief requires
-to be real, needs an API key I did not have. Everything downstream of it works
-against the live containerised target — see `evidence/` — replayed from a
-hand-authored capability marked `recorded_by: "human"` so it cannot be mistaken
-for a discovered one. The escalation run depends on the write flow and so waits
-on the same step.
+**Unfinished rather than cut**: the escalation path end to end. Its mechanism is
+tested, but the live run needs the write flow, whose capability has not been
+discovered. Also: the container runs as root, so evidence it writes is
+root-owned on the host.
 
-Three findings from running it that I would not have predicted, and that the
+The loop itself is complete and in `evidence/`: Opus 5 found the flow in 9
+actions from screenshots alone, the recorder produced a 3-step artifact of
+tier-1 label anchors, and that artifact replays with no model across five
+conditions. Two honesty notes on it. Three of the discovery turns were served
+by `claude-opus-4-8` through the refusal fallback, which the artifact's
+provenance records rather than glossing. And the agent never handles
+credentials — sign-on is a harness precondition, which began as a response to a
+policy refusal and turned out to be the better design.
+
+Five findings from running it that I would not have predicted, and that the
 write-up would be dishonest without:
 
 - **Screen scale is load-bearing, not cosmetic.** 11px Verdana sits at
@@ -265,8 +272,22 @@ write-up would be dishonest without:
   outcome. Two other bugs had the same shape: a run inheriting the previous
   run's screen as its own result, twice, because a terminal outcome was read
   before the browser had repainted.
+- **A modal's shade defeats OCR, and that is correct.** The interstitial dims
+  the page to 45% black, which puts everything beneath it — including the
+  notice's own heading — below what tesseract can read, while its Dismiss link
+  stays legible. Keying detection on the heading meant the modal went
+  unrecognised exactly when it was covering something. A page being unreadable
+  under a modal is not a bug to engineer around: a human cannot act on it
+  either. The job is to notice the modal and clear it.
+- **A blind click can manufacture a false success.** A run whose session had
+  gone clicked recorded coordinates through a stale page the previous run had
+  left on screen, matched its checkpoint against that page, and reported
+  success with a balance it never fetched. A coordinate is a *position*, not an
+  *identification*: unlike a label or a matched patch it carries no evidence
+  the right screen is even present. Replay now refuses to act on one. A wrong
+  answer presented as a right one is the worst thing a replay engine can do.
 
-**What I would do next, in order**: run the discovery and evidence set; then
-per-tenant overrides; then a multi-run stability score, since replaying N times
+**What I would do next, in order**: discover the write flow, which unlocks the
+escalation run; then per-tenant overrides; then a multi-run stability score, since replaying N times
 and reporting flakiness is the cheapest way to earn trust in an artifact before
 letting it run unattended.

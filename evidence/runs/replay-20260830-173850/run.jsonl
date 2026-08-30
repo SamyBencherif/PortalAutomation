@@ -1,0 +1,17 @@
+{"t": 1788111530.608, "event": "run_started", "kind": "replay", "run_id": "replay-20260830-173850"}
+{"t": 1788111553.915, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788111553.925, "event": "scenario_armed", "profile": "flaky", "overrides": {}, "session": "sess-0001"}
+{"t": 1788111553.925, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no"]}
+{"t": 1788111553.926, "event": "step_started", "index": 0, "intent": "type '{member_no}' into the field beside 'Member Number'", "action": "type", "risk": "sensitive"}
+{"t": 1788111554.679, "event": "target_resolved", "index": 0, "tier": "label", "detail": "text -> 'Member Number' @ 53,282"}
+{"t": 1788111554.849, "event": "step_started", "index": 1, "intent": "click 'Find'", "action": "click", "risk": "safe"}
+{"t": 1788111555.628, "event": "target_resolved", "index": 1, "tier": "label", "detail": "text -> 'Find' @ 688,287"}
+{"t": 1788111555.735, "event": "step_started", "index": 2, "intent": "click 'view'", "action": "click", "risk": "safe"}
+{"t": 1788111556.488, "event": "recovering", "context": "step 2 pre", "code": "SERVICE_BUSY", "recovery": "retry_after"}
+{"t": 1788111559.698, "event": "target_resolved", "index": 2, "tier": "label", "detail": "text -> 'view' @ 1430,439"}
+{"t": 1788111561.969, "event": "recovering", "context": "step 2", "code": "MAINTENANCE_INTERSTITIAL", "recovery": "dismiss_interstitial"}
+{"t": 1788111564.542, "event": "frame_captured", "file": "frames/001-step02.png", "label": "step02", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788111566.382, "event": "frame_captured", "file": "frames/002-final.png", "label": "final", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788111566.382, "event": "output_extracted", "name": "savings_balance", "value": "4,182.55"}
+{"t": 1788111566.382, "event": "replay_succeeded", "outputs": ["savings_balance"]}
+{"t": 1788111566.383, "event": "run_finished", "status": "success"}

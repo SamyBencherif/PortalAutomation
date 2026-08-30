@@ -48,6 +48,9 @@ MAX_RECOVERIES = 8
 # against a permanently-broken host is indistinguishable from a hang.
 MAX_RECOVERIES_PER_RUN = 24
 POLL_INTERVAL_S = 0.4
+# How long to wait for a control to appear before accepting a weaker
+# resolution tier. Degrading is a response to drift, not to a slow page.
+TARGET_WAIT_S = 6.0
 
 
 @dataclass
@@ -261,6 +264,61 @@ class ReplayEngine:
             self.surface.wait(POLL_INTERVAL_S)
             frame, screen, sig = self._settle(context)
 
+    def _resolve_waiting(self, step: Step, frame: Frame, screen: ocr.Screen):
+        """Locate the control, waiting for it to appear before settling for less.
+
+        Resolution has to wait on content for the same reason a checkpoint
+        does. A recorded flow does not necessarily carry a postcondition on
+        every step -- the recorder attaches the goal's checkpoint to the last
+        step, so intermediate ones have none -- and without waiting here, replay
+        reaches a step before the page has rendered, tier 1 misses because the
+        control genuinely is not on screen yet, and it falls straight through to
+        the recorded coordinates and clicks blind.
+
+        That is exactly how a `flaky` run failed: it clicked where the 'view'
+        link had been, landed on the right page by luck, and then failed its
+        checkpoint. Degrading to a weaker tier is meant to be a response to
+        drift, not to impatience, so a degraded resolution is only accepted
+        once the control has had time to appear.
+        """
+        deadline = time.time() + TARGET_WAIT_S
+        best = None
+        while True:
+            try:
+                res = anchor_mod.resolve(step.target, screen, frame.png)
+            except anchor_mod.UnresolvedTarget:
+                res = None
+            if res is not None:
+                if not res.is_degraded:
+                    return res, frame, screen
+                best = best or (res, frame, screen)
+            if time.time() >= deadline:
+                break
+            self.surface.wait(POLL_INTERVAL_S)
+            frame, screen, _ = self._settle(f"step {step.index} locate")
+
+        if best is not None:
+            res, frame, screen = best
+            if res.tier is ResolutionTier.ABSOLUTE:
+                # Refuse to click blind. A recorded coordinate is a *position*,
+                # not an *identification*: unlike a label or a matched patch it
+                # carries no evidence that the expected screen is even in front
+                # of us. Proceeding on one produced the worst possible outcome
+                # in testing -- a run whose session had gone, that clicked
+                # through a stale page left by the previous run, matched its
+                # checkpoint against that page and reported success with a
+                # balance it never fetched. A false success is far worse than a
+                # failure. The coordinate stays in the artifact because tier 2
+                # uses it to seed its search.
+                raise anchor_mod.UnresolvedTarget(
+                    step.target,
+                    [f"only recorded coordinates matched after {TARGET_WAIT_S:.0f}s; "
+                     f"refusing to click blind"],
+                )
+            return res, frame, screen
+        # Nothing, at any tier, for the whole window.
+        return anchor_mod.resolve(step.target, screen, frame.png), frame, screen
+
     # ---------------------------------------------------------- extraction
 
     def _extract(self, output: Output, screen: ocr.Screen) -> str | None:
@@ -412,7 +470,7 @@ class ReplayEngine:
             return sig, screen
 
         if step.target is not None:
-            res = anchor_mod.resolve(step.target, screen, frame.png)
+            res, frame, screen = self._resolve_waiting(step, frame, screen)
             self.log.event("target_resolved", index=step.index, tier=res.tier.value,
                            detail=res.detail)
             if res.is_degraded:

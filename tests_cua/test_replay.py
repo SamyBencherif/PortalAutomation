@@ -348,8 +348,15 @@ def test_navigation_off_the_allowlist_is_refused(log):
 
 # ------------------------------------------------------------------- drift
 
-def test_falling_back_to_coordinates_is_reported_as_drift(log):
-    """Still works, but the artifact has quietly stopped being robust."""
+def test_a_coordinate_only_match_refuses_to_click_blind(log):
+    """A recorded coordinate identifies nothing.
+
+    Regression for a false success: a run whose session had expired clicked
+    blind through a stale page left by the previous run, matched its checkpoint
+    against that page, and reported success with a balance it never fetched.
+    Refusing is the only safe answer -- a wrong result presented as a right one
+    is worse than no result.
+    """
     cap = lookup_capability()
     cap.steps[1].target = Target(
         label=TextAnchor(text="A Label That Is Not On This Screen"),
@@ -358,9 +365,9 @@ def test_falling_back_to_coordinates_is_reported_as_drift(log):
     surface = FakeSurface(FLOW)
     result = ReplayEngine(surface, Policy(), log).run(cap, {"member_no": "10001"})
 
-    assert result.status == "success", result.failure
-    assert result.drift, "a coordinate fallback must surface as drift"
-    assert result.drift[0]["tier"] == "absolute"
+    assert result.status == "failed"
+    assert result.failure["kind"] == "unresolved_target"
+    assert "blind" in result.failure["observed"]
 
 
 def test_a_target_that_cannot_be_found_at_all_fails_clearly(log):

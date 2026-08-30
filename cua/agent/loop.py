@@ -36,6 +36,14 @@ from cua.replay.outcomes import OutcomeClass, classify
 from cua.surface.base import Frame, Surface, SurfaceError
 
 MODEL = "claude-opus-5"
+
+# Server-side refusal fallback. Driving a bank UI -- even a fabricated practice
+# one -- sits close enough to the `cyber` policy that the classifier declines
+# intermittently: the identical goal completed in 9 actions on one run and was
+# refused after 5 on the next. Without this a run simply stops mid-flow with no
+# recourse. `"default"` routes by refusal category, so there is no model list to
+# maintain, and the API's own refusal message recommends exactly this.
+FALLBACK_BETA = "server-side-fallback-2026-07-01"
 # The current toolset. Note it carries NO display_width_px/display_height_px --
 # those were removed; coordinates live in the pixel space of the screenshots we
 # return. It needs no beta header.
@@ -45,9 +53,19 @@ COMPUTER_TOOL = {
 }
 TOOLSET = "computer"
 
-SYSTEM = """You are operating a bank back-office application through a remote \
-desktop, exactly as a human teller would. You can only see screenshots and you \
-can only click, type, scroll and press keys.
+SYSTEM = """You are exercising a UI automation system against `mock_teller`, a \
+practice application that ships with this project's own source code and runs \
+in a local container. Every record in it is invented: the names, account \
+numbers and SSN-shaped fields are fabricated test fixtures, and there is no \
+institution behind it.
+
+A session is already established for you -- you do not need to sign in, and \
+you will not be asked to handle any credentials. Start from the screen in \
+front of you.
+
+You are operating the application through a remote desktop, as a human teller \
+would. You can only see screenshots and you can only click, type, scroll and \
+press keys.
 
 This is a legacy application. Expect:
 - small text, table layouts, and controls whose label sits in the cell to the LEFT
@@ -90,6 +108,9 @@ class DiscoveryResult:
     steps: int = 0
     stop_reason: str = ""
     error: str | None = None
+    # True if any turn was served by a refusal fallback rather than the model
+    # that was asked for. Surfaced so a run's provenance is not overstated.
+    used_fallback: bool = False
 
 
 class AgentLoop:
@@ -222,13 +243,15 @@ class AgentLoop:
 
         while step < self.max_steps and time.time() < deadline:
             try:
-                response = self.client.messages.create(
+                response = self.client.beta.messages.create(
                     model=self.model,
                     max_tokens=16000,
                     system=SYSTEM,
                     tools=[COMPUTER_TOOL],
                     thinking={"type": "adaptive"},
                     output_config={"effort": "high"},
+                    betas=[FALLBACK_BETA],
+                    fallbacks="default",
                     messages=messages,
                 )
             except anthropic.APIError as e:
@@ -238,6 +261,17 @@ class AgentLoop:
                 return result
 
             messages.append({"role": "assistant", "content": response.content})
+
+            # Record when a fallback actually served the turn. A run rescued by
+            # a different model is a materially different run, and the evidence
+            # should say so rather than quietly look clean.
+            if any(
+                getattr(entry, "type", None) == "fallback_message"
+                for entry in (getattr(response.usage, "iterations", None) or [])
+            ):
+                self.log.event("served_by_fallback", served_by=response.model)
+                result.used_fallback = True
+
             text = " ".join(b.text for b in response.content if b.type == "text").strip()
             if text:
                 self.log.event("model_said", text=text[:800])
@@ -249,6 +283,22 @@ class AgentLoop:
                 result.final_text = text
                 result.stop_reason = response.stop_reason or ""
                 result.status = "stopped" if response.stop_reason == "refusal" else "succeeded"
+                if response.stop_reason == "refusal":
+                    # stop_details is populated ONLY on a refusal and carries
+                    # the category. Without logging it, a declined run looks
+                    # identical to a model that simply stopped early, and there
+                    # is nothing to act on.
+                    details = getattr(response, "stop_details", None)
+                    result.error = (
+                        f"refused: {getattr(details, 'category', None)} "
+                        f"-- {getattr(details, 'explanation', None)}"
+                    )
+                    self.log.event(
+                        "model_refused",
+                        category=getattr(details, "category", None),
+                        explanation=getattr(details, "explanation", None),
+                        said=text[:500],
+                    )
                 break
 
             results: list[dict[str, Any]] = []
