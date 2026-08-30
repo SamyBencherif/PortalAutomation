@@ -53,6 +53,8 @@ def screen_of(*lines: str) -> Screen:
         ("E-409-DUPLICATE Sub-Account Already Exists", "ALREADY_EXISTS", OutcomeClass.BUSINESS),
         ("More than one member matched", "AMBIGUOUS_MATCH", OutcomeClass.BUSINESS),
         ("Nickname is required.", "VALIDATION_ERROR", OutcomeClass.BUSINESS),
+        ("Initial Deposit must be a numeric amount, e.g. 100.00",
+         "VALIDATION_ERROR", OutcomeClass.BUSINESS),
         ("503 Service Unavailable", "SERVICE_BUSY", OutcomeClass.RECOVERABLE),
         ("Scheduled Maintenance Notice", "MAINTENANCE_INTERSTITIAL", OutcomeClass.RECOVERABLE),
         ("Retrieving account positions, please wait", "DEFERRED_LOAD", OutcomeClass.RECOVERABLE),
@@ -116,6 +118,26 @@ def test_stuck_is_distinct_from_hard_failure():
     assert stuck.klass is OutcomeClass.STUCK
     assert hard.klass is OutcomeClass.HARD
     assert outcomes.is_terminal(stuck) and outcomes.is_terminal(hard)
+
+
+def test_innocuous_prose_is_not_mistaken_for_a_validation_error():
+    """Regression: the maintenance interstitial says "No action is required."
+
+    An earlier catalogue keyed VALIDATION_ERROR on the fragment "is required",
+    so a recoverable interstitial was classified as a business outcome and
+    ended the run with a result that had never happened. Signature fragments
+    must be specific enough that a UI cannot say them in passing.
+    """
+    interstitial = screen_of(
+        "Scheduled Maintenance Notice",
+        "NorthStar Core Banking will be unavailable Saturday 03:00-05:00 ET "
+        "for scheduled maintenance. No action is required.",
+        "Dismiss",
+    )
+    sig = classify(interstitial)
+    assert sig is not None
+    assert sig.code == "MAINTENANCE_INTERSTITIAL"
+    assert sig.klass is OutcomeClass.RECOVERABLE
 
 
 def test_an_ordinary_screen_matches_nothing():

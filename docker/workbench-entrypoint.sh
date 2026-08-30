@@ -8,7 +8,7 @@
 set -euo pipefail
 
 DISPLAY_NUM="${DISPLAY:-:99}"
-GEOMETRY="${CUA_GEOMETRY:-1280x800x24}"
+GEOMETRY="${CUA_GEOMETRY:-1600x1000x24}"
 TARGET="${CUA_TARGET:-http://target:8800}"
 PROXY_PORT="${CUA_PROXY_PORT:-8888}"
 
@@ -48,6 +48,25 @@ for _ in $(seq 1 50); do
   sleep 0.1
 done
 
+# Chromium's password-save bubble pops up over the right-hand side of the page
+# after any login form, and on this app that is exactly where the results grid
+# puts its per-row "view" link -- so the automation goes blind to a control it
+# needs. Command-line flags for this are unreliable across versions; the
+# profile is authoritative.
+mkdir -p /tmp/chrome-profile/Default
+cat > /tmp/chrome-profile/Default/Preferences <<'PREFS'
+{"credentials_enable_service": false,
+ "credentials_enable_autosignin": false,
+ "profile": {"password_manager_enabled": false,
+             "password_manager_leak_detection": false}}
+PREFS
+
+# --force-device-scale-factor is load-bearing, not cosmetic. The target renders
+# 11px Verdana, which sits right at tesseract's limit: recognition flips on
+# sub-pixel layout shifts, so the same page reads cleanly in one render and as
+# "Or" / "Pas" in the next. Scaling the surface puts glyphs at ~16px and takes
+# OCR off that cliff. It costs nothing -- coordinates live in screenshot space
+# either way, so the model and the artifacts are unaffected.
 log "starting chromium against $TARGET"
 chromium \
   --no-sandbox \
@@ -55,10 +74,12 @@ chromium \
   --disable-dev-shm-usage \
   --no-first-run \
   --no-default-browser-check \
-  --disable-features=TranslateUI \
+  --disable-features=TranslateUI,AutofillServerCommunication,PasswordLeakDetection \
   --disable-infobars \
+  --test-type \
   --window-position=0,0 \
-  --window-size=1280,800 \
+  --window-size=1600,1000 \
+  --force-device-scale-factor=1.5 \
   --user-data-dir=/tmp/chrome-profile \
   --proxy-server="http://127.0.0.1:${PROXY_PORT}" \
   "${TARGET}/login" &

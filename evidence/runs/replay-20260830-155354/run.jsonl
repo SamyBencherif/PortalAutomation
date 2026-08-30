@@ -1,0 +1,21 @@
+{"t": 1788105234.95, "event": "run_started", "kind": "replay", "run_id": "replay-20260830-155354"}
+{"t": 1788105234.953, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no", "operator", "password"]}
+{"t": 1788105234.953, "event": "step_started", "index": 0, "intent": "open the sign-on screen", "action": "navigate", "risk": "safe"}
+{"t": 1788105252.852, "event": "frame_captured", "file": "frames/001-step00.png", "label": "step00", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788105252.852, "event": "step_started", "index": 1, "intent": "enter the operator id", "action": "type", "risk": "sensitive"}
+{"t": 1788105253.693, "event": "target_resolved", "index": 1, "tier": "label", "detail": "text -> 'Operator ID' @ 507,328"}
+{"t": 1788105253.874, "event": "step_started", "index": 2, "intent": "enter the password", "action": "type", "risk": "sensitive"}
+{"t": 1788105254.776, "event": "target_resolved", "index": 2, "tier": "label", "detail": "text -> 'Password' @ 522,364"}
+{"t": 1788105254.956, "event": "step_started", "index": 3, "intent": "sign on", "action": "click", "risk": "sensitive"}
+{"t": 1788105255.816, "event": "target_resolved", "index": 3, "tier": "label", "detail": "text -> 'Sign On' @ 634,426"}
+{"t": 1788105257.502, "event": "frame_captured", "file": "frames/002-step03.png", "label": "step03", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788105257.502, "event": "step_started", "index": 4, "intent": "enter the member number", "action": "type", "risk": "sensitive"}
+{"t": 1788105258.313, "event": "target_resolved", "index": 4, "tier": "label", "detail": "text -> 'Member Number' @ 53,282"}
+{"t": 1788105258.482, "event": "step_started", "index": 5, "intent": "run the search", "action": "click", "risk": "safe"}
+{"t": 1788105259.321, "event": "target_resolved", "index": 5, "tier": "label", "detail": "text -> 'Find' @ 688,287"}
+{"t": 1788105261.294, "event": "frame_captured", "file": "frames/003-step05.png", "label": "step05", "size": [1600, 1000], "redacted_regions": 1}
+{"t": 1788105261.294, "event": "step_started", "index": 6, "intent": "open the matched record", "action": "click", "risk": "safe"}
+{"t": 1788105262.221, "event": "target_resolved", "index": 6, "tier": "label", "detail": "text -> 'view' @ 1425,442"}
+{"t": 1788105264.099, "event": "frame_captured", "file": "frames/004-step06.png", "label": "step06", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788105264.099, "event": "business_outcome", "code": "PERMISSION_DENIED", "step": 6}
+{"t": 1788105264.099, "event": "run_finished", "status": "business_outcome"}

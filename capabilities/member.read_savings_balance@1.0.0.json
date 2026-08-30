@@ -1,0 +1,279 @@
+{
+  "app": {
+    "entry_url": "http://target:8800/login",
+    "product": "coreteller",
+    "tenant_variant": "northstar",
+    "version": "7.2.1"
+  },
+  "approval": "draft",
+  "checkpoint": {
+    "description": null,
+    "kind": "text_present",
+    "pattern": null,
+    "text": "Account Positions",
+    "timeout_ms": 15000,
+    "within": null
+  },
+  "description": "Sign on, look up a member by number, open their record and return the savings account balance.",
+  "id": "member.read_savings_balance",
+  "outputs": [
+    {
+      "description": "Current balance of the member's savings account.",
+      "extract": {
+        "anchor": {
+          "aliases": [],
+          "match": "normalized",
+          "occurrence": 0,
+          "offset_px": 30,
+          "relation": "right_of",
+          "text": "Savings"
+        },
+        "pattern": "([\\d,]+\\.\\d{2})",
+        "span_px": 1150
+      },
+      "name": "savings_balance",
+      "sensitive": false,
+      "type": "money"
+    }
+  ],
+  "params": [
+    {
+      "description": "The member number to look up.",
+      "example": "10001",
+      "name": "member_no",
+      "pattern": "\\d{5}",
+      "required": true,
+      "sensitive": false,
+      "type": "string"
+    },
+    {
+      "description": "Teller operator id.",
+      "example": "teller1",
+      "name": "operator",
+      "pattern": null,
+      "required": true,
+      "sensitive": false,
+      "type": "string"
+    },
+    {
+      "description": "Operator password.",
+      "example": null,
+      "name": "password",
+      "pattern": null,
+      "required": true,
+      "sensitive": true,
+      "type": "string"
+    }
+  ],
+  "provenance": {
+    "model": null,
+    "notes": "Hand-authored against measured frames to exercise replay before the LLM discovery run. Not the discovery artifact.",
+    "recorded_at": null,
+    "recorded_by": "human",
+    "run_id": null
+  },
+  "schema_version": "1.0",
+  "steps": [
+    {
+      "action": {
+        "kind": "navigate",
+        "value": "http://target:8800/login"
+      },
+      "expect": {
+        "description": null,
+        "kind": "text_present",
+        "pattern": null,
+        "text": "Operator Sign On",
+        "timeout_ms": 15000,
+        "within": null
+      },
+      "index": 0,
+      "intent": "open the sign-on screen",
+      "max_retries": 2,
+      "on_failure": "abort",
+      "risk": "safe",
+      "target": null
+    },
+    {
+      "action": {
+        "kind": "type",
+        "value": "{operator}"
+      },
+      "expect": null,
+      "index": 1,
+      "intent": "enter the operator id",
+      "max_retries": 2,
+      "on_failure": "abort",
+      "risk": "sensitive",
+      "target": {
+        "absolute": null,
+        "label": {
+          "aliases": [],
+          "match": "normalized",
+          "occurrence": 0,
+          "offset_px": 60,
+          "relation": "right_of",
+          "text": "Operator ID"
+        },
+        "low_confidence": false,
+        "template": null,
+        "tolerance_px": 12
+      }
+    },
+    {
+      "action": {
+        "kind": "type",
+        "value": "{password}"
+      },
+      "expect": null,
+      "index": 2,
+      "intent": "enter the password",
+      "max_retries": 2,
+      "on_failure": "abort",
+      "risk": "sensitive",
+      "target": {
+        "absolute": null,
+        "label": {
+          "aliases": [],
+          "match": "normalized",
+          "occurrence": 0,
+          "offset_px": 60,
+          "relation": "right_of",
+          "text": "Password"
+        },
+        "low_confidence": false,
+        "template": null,
+        "tolerance_px": 12
+      }
+    },
+    {
+      "action": {
+        "kind": "click",
+        "value": null
+      },
+      "expect": {
+        "description": null,
+        "kind": "text_present",
+        "pattern": null,
+        "text": "Member Search",
+        "timeout_ms": 15000,
+        "within": null
+      },
+      "index": 3,
+      "intent": "sign on",
+      "max_retries": 2,
+      "on_failure": "abort",
+      "risk": "sensitive",
+      "target": {
+        "absolute": null,
+        "label": {
+          "aliases": [],
+          "match": "normalized",
+          "occurrence": 0,
+          "offset_px": 60,
+          "relation": "on",
+          "text": "Sign On"
+        },
+        "low_confidence": false,
+        "template": null,
+        "tolerance_px": 12
+      }
+    },
+    {
+      "action": {
+        "kind": "type",
+        "value": "{member_no}"
+      },
+      "expect": null,
+      "index": 4,
+      "intent": "enter the member number",
+      "max_retries": 2,
+      "on_failure": "abort",
+      "risk": "sensitive",
+      "target": {
+        "absolute": null,
+        "label": {
+          "aliases": [
+            "Customer Number"
+          ],
+          "match": "normalized",
+          "occurrence": 0,
+          "offset_px": 60,
+          "relation": "right_of",
+          "text": "Member Number"
+        },
+        "low_confidence": false,
+        "template": null,
+        "tolerance_px": 12
+      }
+    },
+    {
+      "action": {
+        "kind": "click",
+        "value": null
+      },
+      "expect": {
+        "description": null,
+        "kind": "text_present",
+        "pattern": null,
+        "text": "Results",
+        "timeout_ms": 15000,
+        "within": null
+      },
+      "index": 5,
+      "intent": "run the search",
+      "max_retries": 2,
+      "on_failure": "abort",
+      "risk": "safe",
+      "target": {
+        "absolute": null,
+        "label": {
+          "aliases": [],
+          "match": "normalized",
+          "occurrence": 0,
+          "offset_px": 60,
+          "relation": "on",
+          "text": "Find"
+        },
+        "low_confidence": false,
+        "template": null,
+        "tolerance_px": 12
+      }
+    },
+    {
+      "action": {
+        "kind": "click",
+        "value": null
+      },
+      "expect": {
+        "description": null,
+        "kind": "text_present",
+        "pattern": null,
+        "text": "Account Positions",
+        "timeout_ms": 15000,
+        "within": null
+      },
+      "index": 6,
+      "intent": "open the matched record",
+      "max_retries": 2,
+      "on_failure": "abort",
+      "risk": "safe",
+      "target": {
+        "absolute": null,
+        "label": {
+          "aliases": [],
+          "match": "normalized",
+          "occurrence": 0,
+          "offset_px": 60,
+          "relation": "on",
+          "text": "view"
+        },
+        "low_confidence": false,
+        "template": null,
+        "tolerance_px": 12
+      }
+    }
+  ],
+  "title": "Read a member's savings balance",
+  "version": "1.0.0"
+}

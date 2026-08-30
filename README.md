@@ -176,18 +176,35 @@ evidence/       run logs, frames, proxy audit
 
 ## What is verified, and what is not
 
-Honesty about the state of it:
-
-- **Verified by test** (108 passing): the artifact schema, all three targeting
+- **Verified by test** (91 passing): the artifact schema, all three targeting
   tiers, the full error taxonomy, parameter validation, the irreversible gate,
-  redaction, drift reporting, and proxy enforcement against a real target.
-- **Verified by measurement**: tesseract needs `--psm 11` on this surface — at
-  1280×800 it recovers every anchor label, while `--psm 6` on the same image
-  reads "Operator 1D" and "credentils". The perception tests run against a real
-  screenshot for that reason.
-- **Written but not yet exercised**: the X11 surface and the container. They
-  need a running Docker daemon, which this machine did not have.
-- **Not yet run**: the discovery run itself, which needs an API key.
+  redaction, drift reporting, and proxy enforcement driven as real HTTP against
+  a real target.
+- **Verified end to end in the container** — see [`evidence/`](evidence/). The
+  read flow replays against the live app with every control resolved by label
+  (tier 1), returns `savings_balance = 4,182.55`, and produces four distinct
+  result kinds across five runs: success, two business outcomes, a success that
+  absorbed five recoverable faults, and a hard failure at a named step.
+- **Not run: the LLM discovery run.** It needs an API key. The capability that
+  replays above was hand-authored against measured frames and is marked
+  `recorded_by: "human"`; it exists to exercise replay independently of the
+  model, and is not a stand-in for the discovery run the brief requires. The
+  escalation run depends on the write flow and so waits on the same step.
 
-`REPORT.md` §7 lists what was cut deliberately, as opposed to what is merely
+Three things were only true after measurement, and each changed the code:
+
+- **Screen scale is load-bearing.** The target renders 11px Verdana, which sits
+  at tesseract's limit — recognition flips on sub-pixel layout shifts, so the
+  same page read cleanly once and as `'Or'` / `'Pas'` the next time. The
+  browser runs at `--force-device-scale-factor=1.5` for that reason alone.
+- **Whole-frame OCR silently loses text.** Handed a 1600×1000 screenshot,
+  tesseract returns the bold panel header and omits "Member Number", "Surname"
+  and "Find" — in *every* page-segmentation mode. Cropped to the region holding
+  them, all three read at 96% confidence. The discriminator is text density,
+  not legibility. `ocr.read` therefore crops to content before reading.
+- **Browser chrome is part of the surface.** Chromium's password-save bubble
+  covered the results grid's `view` link, so the automation went blind to a
+  control it needed.
+
+`REPORT.md` §7 separates what was cut deliberately from what is merely
 unfinished.

@@ -25,8 +25,9 @@ import shutil
 import subprocess
 import time
 
-from PIL import Image
 import io
+
+from PIL import Image
 
 from cua.artifact.schema import Point
 from cua.surface.base import Frame, MouseButton, ScrollDirection, SurfaceError
@@ -39,6 +40,12 @@ _SCROLL: dict[str, int] = {"up": 4, "down": 5, "left": 6, "right": 7}
 # input. 12ms is empirically slow enough to be reliable and fast enough not to
 # dominate a run.
 TYPE_DELAY_MS = 12
+
+# Anchoring never keys on the masthead, and that is not an accident: it is
+# white-on-navy, and OCR reads light-on-dark text far worse than the
+# dark-on-light body of the page. "NorthStar Core Banking" comes back as
+# 'Ne' / 'ths' / 'ar Core' while the form labels beside it read perfectly.
+# Worth knowing before trusting a screen dump that looks half-broken.
 
 
 class X11Surface:
@@ -74,15 +81,7 @@ class X11Surface:
 
     # ------------------------------------------------------------- observe
 
-    def observe(self) -> Frame:
-        """Photograph the whole display, right now.
-
-        Deliberately captures the root window rather than the browser's
-        viewport: native dialogs, and anything the window manager draws, are
-        part of what a human operator sees and therefore part of what we must
-        see. The target raises a real `window.confirm()` on its irreversible
-        action, and a viewport-only capture would miss it entirely.
-        """
+    def _grab(self) -> bytes:
         proc = subprocess.run(
             ["import", "-window", "root", "-silent", "png:-"],
             env=self._env(), capture_output=True, check=False,
@@ -92,7 +91,27 @@ class X11Surface:
                 "screen capture failed: "
                 + (proc.stderr.decode("utf-8", "replace").strip() or "no output")
             )
-        png = proc.stdout
+        return proc.stdout
+
+    def observe(self) -> Frame:
+        """Photograph the whole display, right now.
+
+        Deliberately captures the root window rather than the browser's
+        viewport: native dialogs, and anything the window manager draws, are
+        part of what a human operator sees and therefore part of what we must
+        see. The target raises a real `window.confirm()` on its irreversible
+        action, and a viewport-only capture would miss it entirely.
+
+        Deliberately does NOT wait for the screen to settle. I added that,
+        suspecting mid-repaint captures were producing garbled OCR, then
+        measured it: six consecutive grabs of a live page were byte-identical,
+        and the garbling had two other causes entirely (11px text, since fixed
+        by scaling the surface, and white-on-navy masthead text). Waiting for
+        a stable frame would have been unfalsifiable padding hiding neither
+        problem. Staleness is handled where it belongs -- `_await` in the
+        replay engine polls on content, so an early frame costs one iteration.
+        """
+        png = self._grab()
         with Image.open(io.BytesIO(png)) as img:
             width, height = img.size
         return Frame(png=png, width=width, height=height)

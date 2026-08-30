@@ -9,5 +9,6 @@ c.txt
 
 # Automation system
 .env
-evidence/runs/
-evidence/proxy.jsonl
+# evidence/runs/ is deliberately NOT ignored: the demonstration of the
+# end-to-end flow is a required deliverable, so the run logs and frames are
+# committed. Frames are redacted before they are written.

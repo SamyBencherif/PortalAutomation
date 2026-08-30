@@ -1,0 +1,56 @@
+[
+  {
+    "seq": 1,
+    "session_id": "sess-0001",
+    "actor": "system",
+    "route": "control",
+    "path": "/_control/scenario",
+    "detail": "profile=flaky overrides={}",
+    "at": 1788105560.759
+  },
+  {
+    "seq": 2,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "search",
+    "path": "/members",
+    "detail": "transient 503 (1/1)",
+    "at": 1788105561.624
+  },
+  {
+    "seq": 3,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "nav",
+    "path": "/login",
+    "detail": "sign on as teller1",
+    "at": 1788105606.426
+  },
+  {
+    "seq": 4,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "search",
+    "path": "/members",
+    "detail": "by number 10001",
+    "at": 1788105610.371
+  },
+  {
+    "seq": 5,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "search",
+    "path": "/members",
+    "detail": "by number 10001",
+    "at": 1788105612.61
+  },
+  {
+    "seq": 6,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "nav",
+    "path": "/members/10001",
+    "detail": "viewed 10001",
+    "at": 1788105615.866
+  }
+]

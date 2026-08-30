@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "capability": "member.read_savings_balance@1.0.0",
+  "run_id": "replay-20260830-155559",
+  "outputs": {
+    "savings_balance": "4,182.55"
+  },
+  "outcome": null,
+  "failure": null,
+  "recovered": [],
+  "drift": [],
+  "steps_executed": 7
+}

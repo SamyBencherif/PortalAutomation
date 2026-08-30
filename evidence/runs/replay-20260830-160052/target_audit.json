@@ -1,0 +1,29 @@
+[
+  {
+    "seq": 1,
+    "session_id": "sess-0001",
+    "actor": "system",
+    "route": "control",
+    "path": "/_control/scenario",
+    "detail": "profile=clean overrides={'error_500_on': ['search']}",
+    "at": 1788105640.042
+  },
+  {
+    "seq": 2,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "nav",
+    "path": "/login",
+    "detail": "sign on as teller1",
+    "at": 1788105675.222
+  },
+  {
+    "seq": 3,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "search",
+    "path": "/members",
+    "detail": "server fault 500",
+    "at": 1788105675.225
+  }
+]

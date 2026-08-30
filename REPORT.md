@@ -239,12 +239,32 @@ wants per-capability, per-tenant authorisation with an approver identity.
   `__VIEWSTATE` token is the interesting one — it would *prove* replay drives
   the UI rather than forging HTTP requests.
 
-**Unfinished rather than cut**, and I would rather be clear about the
-difference: the container is written but has never been built (no Docker daemon
-on the machine), the X11 surface is therefore unexercised, and the discovery run
-— which the brief requires to be real — needs an API key I did not have. The
-108 tests cover everything that does not need those two things, including proxy
-enforcement against a real target and the full taxonomy.
+**Unfinished rather than cut**: the LLM discovery run, which the brief requires
+to be real, needs an API key I did not have. Everything downstream of it works
+against the live containerised target — see `evidence/` — replayed from a
+hand-authored capability marked `recorded_by: "human"` so it cannot be mistaken
+for a discovered one. The escalation run depends on the write flow and so waits
+on the same step.
+
+Three findings from running it that I would not have predicted, and that the
+write-up would be dishonest without:
+
+- **Screen scale is load-bearing, not cosmetic.** 11px Verdana sits at
+  tesseract's limit: the same page read cleanly once and as `'Or'` / `'Pas'`
+  the next time, flipping on sub-pixel layout shifts. I had retired this risk
+  early on one lucky sample, which was wrong.
+- **Whole-frame OCR loses text silently and partially.** On a 1600×1000 frame
+  tesseract returns the bold header and omits the form labels beside it, in
+  every segmentation mode; cropped to their region the same pixels read at 96%
+  confidence. Density, not legibility, is the discriminator. This is the worst
+  kind of failure — the frame looks successfully read and the control you
+  needed is simply absent — and it is why `ocr.read` crops to content first.
+- **A signature fragment must be unsayable in passing.** `VALIDATION_ERROR`
+  keyed on "is required", and the maintenance interstitial says "No action is
+  required." A recoverable condition was therefore reported as a final business
+  outcome. Two other bugs had the same shape: a run inheriting the previous
+  run's screen as its own result, twice, because a terminal outcome was read
+  before the browser had repainted.
 
 **What I would do next, in order**: run the discovery and evidence set; then
 per-tenant overrides; then a multi-run stability score, since replaying N times

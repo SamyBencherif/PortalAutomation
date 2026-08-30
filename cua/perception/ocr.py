@@ -41,6 +41,11 @@ DEFAULT_MIN_CONF = 30.0
 TESSERACT = "tesseract"
 PSM_SPARSE = "11"
 
+# Band geometry for tall content. The overlap comfortably exceeds a line of
+# 11px text, so no line can be clipped by a boundary in every band it lands in.
+BAND_HEIGHT = 200
+BAND_OVERLAP = 60
+
 
 def normalize(s: str) -> str:
     """Collapse a string to its comparable core.
@@ -145,13 +150,12 @@ def _matches(block: TextBlock, needle: str, match: str) -> bool:
     return block.norm == normalize(needle)
 
 
-def read(png: bytes, min_conf: float = DEFAULT_MIN_CONF) -> Screen:
-    """OCR a PNG into a `Screen`.
+def _tesseract(png: bytes, min_conf: float) -> Screen:
+    """One tesseract call.
 
-    Shells out rather than binding a library: tesseract's TSV interface is
-    stable, gives per-word boxes and confidences directly, and keeps a C
-    extension out of the dependency set. The cost is one subprocess per frame,
-    which is noise next to a model round-trip.
+    Shells out rather than binding a library: the TSV interface is stable,
+    gives per-word boxes and confidences directly, and keeps a C extension out
+    of the dependency set.
     """
     proc = subprocess.run(
         [TESSERACT, "stdin", "stdout", "--psm", PSM_SPARSE, "tsv"],
@@ -162,6 +166,112 @@ def read(png: bytes, min_conf: float = DEFAULT_MIN_CONF) -> Screen:
     if proc.returncode != 0:
         raise OcrError(proc.stderr.decode("utf-8", "replace").strip() or "tesseract failed")
     return _parse_tsv(proc.stdout.decode("utf-8", "replace"), min_conf)
+
+
+def _encode(img) -> bytes:
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return buf.getvalue()
+
+
+def _shift(screen: Screen, dx: int, dy: int) -> list[TextBlock]:
+    """Move a sub-image's boxes back into full-frame coordinates.
+
+    Non-negotiable: every coordinate this module emits is later clicked. A
+    block reported in crop-space would send the pointer somewhere arbitrary.
+    """
+    if dx == 0 and dy == 0:
+        return list(screen.blocks)
+    return [
+        TextBlock(words=tuple(
+            Word(text=w.text, conf=w.conf,
+                 box=Rect(x=w.box.x + dx, y=w.box.y + dy, w=w.box.w, h=w.box.h))
+            for w in b.words
+        ))
+        for b in screen.blocks
+    ]
+
+
+def content_box(img, background_tolerance: int = 12) -> tuple[int, int, int, int]:
+    """The bounding box of everything that is not flat background.
+
+    A full-screen capture of a business app is mostly empty desktop and empty
+    page. That matters more than it sounds: see `read`.
+    """
+    import numpy as np
+
+    arr = np.asarray(img.convert("L"), dtype=np.int16)
+    # The most common value is the page/desktop fill.
+    background = int(np.bincount(arr.ravel()).argmax())
+    mask = np.abs(arr - background) > background_tolerance
+    rows = np.flatnonzero(mask.any(axis=1))
+    cols = np.flatnonzero(mask.any(axis=0))
+    if rows.size == 0 or cols.size == 0:
+        return (0, 0, img.width, img.height)
+    pad = 8
+    return (
+        max(0, int(cols[0]) - pad), max(0, int(rows[0]) - pad),
+        min(img.width, int(cols[-1]) + pad + 1),
+        min(img.height, int(rows[-1]) + pad + 1),
+    )
+
+
+def read(png: bytes, min_conf: float = DEFAULT_MIN_CONF) -> Screen:
+    """OCR a PNG into a `Screen`, in full-frame coordinates.
+
+    This does more than call tesseract, and it has to. Handed a whole
+    1600x1000 screenshot, tesseract's layout analysis *silently discards* the
+    small text regions: on the member search page it returns the bold panel
+    header and the status bar and simply omits "Member Number", "Surname" and
+    "Find" -- in every page-segmentation mode. Crop the identical pixels to the
+    900x220 region containing them and all three read perfectly at 96%
+    confidence. The discriminator is text density, not legibility, size or
+    contrast.
+
+    That is a nasty failure because it is silent and partial: the frame looks
+    successfully OCR'd, and the control you needed is simply not in it.
+
+    So the frame is first cropped to its actual content -- a full-screen
+    capture of a business app is mostly flat desktop -- which raises density
+    enough for one call to work. If the content is still tall, it is read in
+    overlapping bands as well and the results merged. Banding alone was
+    rejected as the primary strategy: it recovered everything at 200px bands
+    and nothing at 250px, and a parameter that arbitrary should not be load
+    bearing.
+    """
+    from PIL import Image
+
+    with Image.open(io.BytesIO(png)) as img:
+        img.load()
+        width, height = img.size
+        x0, y0, x1, y1 = content_box(img)
+        if x1 - x0 < 16 or y1 - y0 < 16:
+            return _tesseract(png, min_conf)
+
+        cropped = img.crop((x0, y0, x1, y1))
+        blocks = _shift(_tesseract(_encode(cropped), min_conf), x0, y0)
+
+        # Tall content stays sparse even after cropping, so read it in bands
+        # too and merge. Overlap exceeds any single line's height, so no line
+        # can be clipped by a boundary in every band it appears in.
+        if cropped.height > BAND_HEIGHT:
+            seen = {(w.box.x, w.box.y, w.text) for b in blocks for w in b.words}
+            y = 0
+            while y < cropped.height:
+                bottom = min(cropped.height, y + BAND_HEIGHT)
+                band = _tesseract(
+                    _encode(cropped.crop((0, y, cropped.width, bottom))), min_conf
+                )
+                for block in _shift(band, x0, y0 + y):
+                    key = {(w.box.x, w.box.y, w.text) for w in block.words}
+                    if not key & seen:
+                        blocks.append(block)
+                        seen |= key
+                if bottom >= cropped.height:
+                    break
+                y += BAND_HEIGHT - BAND_OVERLAP
+
+    return Screen(blocks)
 
 
 def _parse_tsv(tsv: str, min_conf: float) -> Screen:

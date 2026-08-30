@@ -47,6 +47,10 @@ WORKDIR /app
 COPY requirements-cua.txt /app/requirements-cua.txt
 RUN pip install --no-cache-dir -r /app/requirements-cua.txt
 
+# Without this, `python /app/evidence/foo.py` puts /app/evidence on sys.path
+# instead of /app, and the cua package is invisible.
+ENV PYTHONPATH=/app
+
 COPY docker/workbench-entrypoint.sh /usr/local/bin/workbench-entrypoint
 RUN chmod +x /usr/local/bin/workbench-entrypoint
 

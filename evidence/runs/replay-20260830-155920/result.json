@@ -1,0 +1,39 @@
+{
+  "status": "success",
+  "capability": "member.read_savings_balance@1.0.0",
+  "run_id": "replay-20260830-155920",
+  "outputs": {
+    "savings_balance": "4,182.55"
+  },
+  "outcome": null,
+  "failure": null,
+  "recovered": [
+    {
+      "context": "step 0 pre",
+      "code": "MAINTENANCE_INTERSTITIAL",
+      "recovery": "dismiss_interstitial"
+    },
+    {
+      "context": "step 0 pre",
+      "code": "SERVICE_BUSY",
+      "recovery": "retry_after"
+    },
+    {
+      "context": "step 0 pre",
+      "code": "SERVICE_BUSY",
+      "recovery": "retry_after"
+    },
+    {
+      "context": "step 1 pre",
+      "code": "MAINTENANCE_INTERSTITIAL",
+      "recovery": "dismiss_interstitial"
+    },
+    {
+      "context": "step 5",
+      "code": "MAINTENANCE_INTERSTITIAL",
+      "recovery": "dismiss_interstitial"
+    }
+  ],
+  "drift": [],
+  "steps_executed": 7
+}

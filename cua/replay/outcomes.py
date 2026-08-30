@@ -119,8 +119,15 @@ CORETELLER: tuple[Signature, ...] = (
     Signature(
         code="VALIDATION_ERROR",
         klass=OutcomeClass.BUSINESS,
-        any_of=("is required", "must be at least", "must be a numeric amount",
-                "must be selected"),
+        # Deliberately the *whole* message, not a fragment of it. An earlier
+        # version keyed on "is required" and duly classified the maintenance
+        # interstitial -- "No action is required." -- as a validation error,
+        # ending the run with a business outcome that never happened. A
+        # signature has to be specific enough that it cannot occur in ordinary
+        # page prose, which rules out any phrase a UI might say in passing.
+        any_of=("nickname is required", "purpose must be selected",
+                "must be a numeric amount", "deposit must be at least",
+                "password of at least"),
         message="The form rejected the supplied values.",
     ),
 

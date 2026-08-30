@@ -224,19 +224,33 @@ class ReplayEngine:
             return bool(check.pattern) and re.search(check.pattern, screen.text) is not None
         return False
 
-    def _await(self, check: Checkpoint, context: str):
+    def _await(self, check: Checkpoint, context: str, stale_code: str | None = None):
         """Poll until the checkpoint holds or its timeout expires.
 
         Waits on *content*, never on a load event or a fixed sleep. The target
         renders a spinner and swaps real data in afterwards precisely to punish
         anything that assumes navigation means arrival.
+
+        `stale_code` is whatever outcome was already on screen *before* this
+        step acted. Seeing the same one again means the browser has not
+        repainted yet, so it belongs to the previous page and is ignored until
+        something else appears. Without this a run inherits the last one's
+        result -- replaying member 10001 straight after 10003 reported
+        PERMISSION_DENIED in a single step, reading a page the previous run
+        had left on screen.
+
+        Comparing the recognised outcome rather than the pixels is deliberate:
+        an earlier attempt compared frames byte-for-byte and never matched,
+        because the mouse pointer had moved between them. The question being
+        asked is "is this the same *state*", not "are these the same bitmap".
         """
         deadline = time.time() + check.timeout_ms / 1000
         frame, screen, sig = self._settle(context)
         while True:
             if self._check(screen, check):
                 return True, frame, screen, sig
-            if sig is not None and sig.klass in (
+            leftover = sig is not None and sig.code == stale_code
+            if not leftover and sig is not None and sig.klass in (
                 OutcomeClass.BUSINESS, OutcomeClass.HARD, OutcomeClass.STUCK
             ):
                 # The app has given a final answer. Waiting for the checkpoint
@@ -385,7 +399,13 @@ class ReplayEngine:
                        action=step.action.kind.value, risk=step.risk.value)
 
         frame, screen, sig = self._settle(f"step {step.index} pre")
-        if sig is not None and sig.klass in (
+        # A NAVIGATE step is about to replace whatever is on screen, so what is
+        # there now says nothing about this run. Reading it as an outcome makes
+        # a run inherit the previous one's result: replaying member 10003 right
+        # after 99999 reported RECORD_NOT_FOUND in one step, because the
+        # not-found page from the earlier run was still displayed. Every other
+        # action type acts *on* the current screen, so the check stands there.
+        if step.action.kind is not ActionKind.NAVIGATE and sig is not None and sig.klass in (
             OutcomeClass.BUSINESS, OutcomeClass.HARD, OutcomeClass.STUCK
         ):
             self.log.frame(frame, f"step{step.index:02d}-{sig.code.lower()}")
@@ -429,7 +449,10 @@ class ReplayEngine:
                 pass
 
         if step.expect is not None:
-            ok, frame, screen, sig = self._await(step.expect, f"step {step.index}")
+            ok, frame, screen, sig = self._await(
+                step.expect, f"step {step.index}",
+                stale_code=sig.code if sig is not None else None,
+            )
             self.log.frame(frame, f"step{step.index:02d}")
             if not ok:
                 if sig is not None and sig.klass in (
