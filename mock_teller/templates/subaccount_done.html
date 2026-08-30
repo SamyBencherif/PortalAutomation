@@ -1,0 +1,17 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="panel">
+  <div class="panel-hd">Sub-Account Opened</div>
+  <div class="panel-bd">
+    <div class="msg-info">The sub-account has been opened successfully.</div><br>
+    <table class="grid" cellspacing="0" style="width:auto">
+      <tr><th>Confirmation Number</th><td id="ctl00_cph1_lblConfirm">{{ confirmation }}</td></tr>
+      <tr><th>Account Number</th><td>{{ account.number }}</td></tr>
+      <tr><th>Type</th><td>{{ account.kind }}</td></tr>
+      <tr><th>Opening Balance</th><td>{{ account.balance }} USD</td></tr>
+      <tr><th>Effective Date</th><td>{{ account.opened }}</td></tr>
+    </table>
+    <br><a href="{{ back_url }}">Return to {{ tenant.noun }} Record</a>
+  </div>
+</div>
+{% endblock %}

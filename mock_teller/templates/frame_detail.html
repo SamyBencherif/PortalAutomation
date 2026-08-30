@@ -1,0 +1,30 @@
+<html>
+<head><link rel="stylesheet" type="text/css" href="/static/legacy.css"></head>
+<body class="{{ tenant.theme }}" style="background:#fff">
+{% if spinner %}
+  <div id="ctl00_spin">Retrieving account positions, please wait&hellip;</div>
+  <!-- A real deferred load: the navigation is long finished, the data is not
+       here yet, and it is not hidden in the DOM either. -->
+  <script>
+    setTimeout(function () {
+      window.location.replace("{{ ready_url }}");
+    }, {{ spinner_delay_ms }});
+  </script>
+{% else %}
+  <table class="grid" id="ctl00_cph1_grdAccounts" cellspacing="0" width="100%">
+    <tr><th>Account</th><th>Type</th><th>Status</th><th>Opened</th>
+        <th align="right">Current Balance</th></tr>
+    {% for a in accounts %}
+    <tr {% if loop.index0 % 2 %}class="alt"{% endif %}>
+      <td>{{ a.number }}</td>
+      <td>{{ a.kind }}</td>
+      <td>{% if a.status != 'Active' %}<b>{{ a.status }}</b>{% else %}{{ a.status }}{% endif %}</td>
+      <td>{{ a.opened }}</td>
+      <td align="right">{{ a.balance }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% if frozen_note %}<br><div class="msg-warn">{{ frozen_note }}</div>{% endif %}
+{% endif %}
+</body>
+</html>

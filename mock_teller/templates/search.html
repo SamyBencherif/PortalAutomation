@@ -1,0 +1,56 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="panel">
+  <div class="panel-hd">{{ tenant.noun }} Search</div>
+  <div class="panel-bd">
+    <!-- GET form: the param names differ per tenant, which is exactly the kind
+         of drift a cross-tenant artifact has to canonicalize. -->
+    <form method="get" action="{{ tenant.path(tenant.collection) }}">
+      <table><tr>
+        <td class="fieldlabel">{{ tenant.noun }} Number</td>
+        <td><input type="text" name="{{ tenant.search_param }}"
+                   id="ctl00_cph1_txtMemberNo" size="14"
+                   value="{{ q_number or '' }}"></td>
+        <td class="fieldlabel">Surname</td>
+        <td><input type="text" name="{{ tenant.name_param }}"
+                   id="ctl00_cph1_txtSurname" size="18"
+                   value="{{ q_name or '' }}"></td>
+        <td><input type="submit" class="btn" name="ctl00$cph1$btnFind"
+                   id="ctl00_cph1_btnFind" value="Find"></td>
+      </tr></table>
+    </form>
+  </div>
+</div>
+
+{% if message %}
+<div class="panel"><div class="panel-hd">Search Result</div>
+  <div class="panel-bd"><div class="{{ message_class }}">{{ message }}</div></div>
+</div>
+{% endif %}
+
+{% if results %}
+<div class="panel">
+  <div class="panel-hd">Results &mdash; {{ results|length }} record(s)</div>
+  <div class="panel-bd">
+    {% if results|length > 1 %}
+    <div class="msg-warn">More than one {{ tenant.noun|lower }} matched. Select
+      the correct record.</div><br>
+    {% endif %}
+    <table class="grid" id="ctl00_cph1_grdMembers" cellspacing="0">
+      <tr><th>{{ tenant.noun }} No.</th><th>Name</th><th>Date of Birth</th>
+          <th>Branch</th><th>Accounts</th><th>&nbsp;</th></tr>
+      {% for m in results %}
+      <tr {% if loop.index0 % 2 %}class="alt"{% endif %}>
+        <td>{{ m.member_no }}</td>
+        <td>{{ m.name }}</td>
+        <td class="pii">{{ m.dob }}</td>
+        <td>{{ m.branch }}</td>
+        <td>{{ m.accounts|length }}</td>
+        <td><a href="{{ tenant.path(tenant.collection, m.member_no) }}">view</a></td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

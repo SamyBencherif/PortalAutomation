@@ -1,0 +1,12 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="panel">
+  <div class="panel-hd">{{ heading }}</div>
+  <div class="panel-bd">
+    <div class="{{ message_class }}">{{ message }}</div>
+    {% if code %}<br><table><tr><td class="fieldlabel">Reference</td>
+      <td>{{ code }}</td></tr></table>{% endif %}
+    <br><a href="{{ back_url }}">Return to {{ tenant.noun }} Search</a>
+  </div>
+</div>
+{% endblock %}

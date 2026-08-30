@@ -1,0 +1,105 @@
+<html>
+<head><title>Mock Teller &mdash; Control Plane</title>
+<style>
+  /* Deliberately NOT legacy.css. This panel is out-of-band operator tooling,
+     not part of the surface under test, and it should never be confused for it. */
+  body { font: 13px/1.5 system-ui, sans-serif; margin: 0; background: #0f1115; color: #e6e6e6; }
+  header { background: #1a1d24; padding: 14px 20px; border-bottom: 1px solid #2a2f3a; }
+  h1 { margin: 0; font-size: 15px; letter-spacing: .3px; }
+  .sub { color: #8b93a7; font-size: 12px; margin-top: 3px; }
+  main { padding: 20px; max-width: 900px; }
+  section { background: #161922; border: 1px solid #262b36; border-radius: 6px;
+            padding: 14px 16px; margin-bottom: 16px; }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .8px;
+       color: #8b93a7; margin: 0 0 10px; }
+  .prof { display: inline-block; margin: 0 6px 6px 0; }
+  .prof button { background: #222735; color: #e6e6e6; border: 1px solid #333a4a;
+                 border-radius: 4px; padding: 6px 12px; cursor: pointer; font: inherit; }
+  .prof button:hover { background: #2c3345; }
+  .prof.on button { background: #2f6f4f; border-color: #3d8f66; }
+  .danger button { background: #5a2530; border-color: #7a3340; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid #242936; }
+  th { color: #8b93a7; font-weight: 500; }
+  code { background: #0b0d12; padding: 1px 5px; border-radius: 3px; color: #9fd2b0; }
+  .actor-human { color: #ffc46b; } .actor-agent { color: #7fb2ff; }
+  a { color: #7fb2ff; }
+</style></head>
+<body>
+<header>
+  <h1>Mock Teller &mdash; Control Plane</h1>
+  <div class="sub">Out-of-band. Excluded from the automation allowlist by design.
+    Active profile: <code>{{ active_profile }}</code></div>
+</header>
+<main>
+
+<section>
+  <h2>Scenario profile</h2>
+  {% for p in profiles %}
+  <form class="prof {% if p == active_profile %}on{% endif %}" method="post"
+        action="/_control/scenario" style="display:inline-block">
+    <input type="hidden" name="profile" value="{{ p }}">
+    <button type="submit">{{ p }}</button>
+  </form>
+  {% endfor %}
+  <p class="sub" style="margin-bottom:0">{{ profile_help }}</p>
+</section>
+
+<section>
+  <h2>Reset</h2>
+  <form class="prof danger" method="post" action="/_control/reset">
+    <button type="submit">Reset all state</button>
+  </form>
+  <span class="sub">Clears sessions, members, audit log and the confirmation
+    counter. Run this between replay runs.</span>
+</section>
+
+<section>
+  <h2>Sessions</h2>
+  {% if sessions %}
+  <table><tr><th>Session</th><th>User</th><th>In control</th><th>Profile</th>
+             <th>Views</th><th>Draft</th><th></th></tr>
+  {% for s in sessions %}
+  <tr>
+    <td><code>{{ s.sid }}</code></td><td>{{ s.user or '—' }}</td>
+    <td class="actor-{{ s.actor }}">{{ s.actor }}</td>
+    <td>{{ s.profile }}</td><td>{{ s.page_views }}</td>
+    <td>{{ 'yes' if s.has_draft else '—' }}</td>
+    <td>
+      <form method="post" action="/_control/handoff" style="display:inline">
+        <input type="hidden" name="sid" value="{{ s.sid }}">
+        <input type="hidden" name="actor" value="{{ 'agent' if s.actor == 'human' else 'human' }}">
+        <button type="submit" style="background:#222735;color:#e6e6e6;border:1px solid #333a4a;border-radius:4px;padding:3px 9px;cursor:pointer;font:inherit">
+          give control to {{ 'agent' if s.actor == 'human' else 'human' }}</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+  </table>
+  {% else %}<p class="sub">No sessions yet.</p>{% endif %}
+</section>
+
+<section>
+  <h2>Audit log <span class="sub">— proof of who did what on which session</span></h2>
+  {% if audit %}
+  <table><tr><th>#</th><th>Session</th><th>Actor</th><th>Route</th><th>Path</th><th>Detail</th></tr>
+  {% for e in audit %}
+  <tr><td>{{ e.seq }}</td><td><code>{{ e.session_id }}</code></td>
+      <td class="actor-{{ e.actor }}">{{ e.actor }}</td>
+      <td>{{ e.route }}</td><td>{{ e.path }}</td><td>{{ e.detail }}</td></tr>
+  {% endfor %}
+  </table>
+  {% else %}<p class="sub">Nothing recorded yet.</p>{% endif %}
+</section>
+
+<section>
+  <h2>Tenants</h2>
+  <table><tr><th>Tenant</th><th>Product</th><th>Entry point</th></tr>
+  {% for t in tenants %}
+  <tr><td>{{ t.name }}</td><td>{{ t.product_version }}</td>
+      <td><a href="{{ t.path('login') }}">{{ t.path('login') }}</a></td></tr>
+  {% endfor %}
+  </table>
+</section>
+
+</main></body></html>

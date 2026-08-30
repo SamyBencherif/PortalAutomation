@@ -1,0 +1,43 @@
+/* Deliberately period-accurate. Table layout, no grid, no flex, no variables
+   in the places that matter. Two themes for the two tenants. */
+body { font-family: Verdana, Geneva, sans-serif; font-size: 11px; margin: 0;
+       background: #d4d0c8; color: #000; }
+table { border-collapse: collapse; }
+td, th { font-size: 11px; padding: 3px 6px; vertical-align: top; }
+a { color: #00309c; }
+.masthead { width: 100%; color: #fff; padding: 6px 10px; }
+.theme-northstar .masthead { background: #14417a; border-bottom: 3px solid #c8a83c; }
+.theme-pinebank  .masthead { background: #1d5c37; border-bottom: 3px solid #b8c83c; }
+.brand { font-size: 15px; font-weight: bold; letter-spacing: -0.5px; }
+.verstamp { font-size: 9px; color: #cfd8e6; }
+.navbar { background: #ececec; border-bottom: 1px solid #999; padding: 4px 10px; }
+.navbar a { margin-right: 14px; text-decoration: none; }
+.panel { border: 1px solid #7f9db9; background: #fff; margin: 10px; }
+.panel-hd { background: #ece9d8; border-bottom: 1px solid #7f9db9;
+            font-weight: bold; padding: 4px 8px; }
+.panel-bd { padding: 8px; }
+.grid { width: 100%; border: 1px solid #b5b5b5; }
+.grid th { background: #ece9d8; border: 1px solid #b5b5b5; text-align: left; }
+.grid td { border: 1px solid #d8d8d8; }
+.grid tr.alt td { background: #f6f6f6; }
+.fieldlabel { text-align: right; white-space: nowrap; padding-right: 8px; }
+input[type=text], input[type=password], select {
+  border: 1px solid #7f9db9; font-family: Verdana; font-size: 11px; padding: 2px; }
+.btn { border: 1px solid #7f9db9; background: #ece9d8; font-family: Verdana;
+       font-size: 11px; padding: 2px 12px; cursor: pointer; }
+.msg-info  { border: 1px solid #7f9db9; background: #eef4fb; padding: 6px 8px; }
+.msg-warn  { border: 1px solid #c0a000; background: #fffbe6; padding: 6px 8px; }
+.msg-error { border: 1px solid #a00; background: #fdeeee; padding: 6px 8px; color: #900; }
+.sysfault { font-family: "Courier New", monospace; font-size: 11px;
+            background: #fff; border: 1px solid #a00; padding: 10px; }
+.pii { letter-spacing: 0.5px; }
+.statusbar { background: #ece9d8; border-top: 1px solid #999; padding: 3px 10px;
+             font-size: 10px; color: #444; }
+/* The interstitial. A plain positioned div, not <dialog>: no .close(), no
+   ::backdrop, no escape-key handling. The shade really does eat clicks. */
+#ctl00_shade { position: fixed; left: 0; top: 0; width: 100%; height: 100%;
+               background: #000; opacity: 0.45; z-index: 998; }
+#ctl00_modal { position: fixed; left: 50%; top: 130px; width: 380px;
+               margin-left: -190px; background: #fff; border: 2px solid #14417a;
+               z-index: 999; }
+#ctl00_spin { padding: 40px; text-align: center; color: #555; }

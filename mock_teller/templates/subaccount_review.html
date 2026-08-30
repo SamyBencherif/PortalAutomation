@@ -1,0 +1,44 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="panel">
+  <div class="panel-hd">Review &mdash; Confirm Sub-Account</div>
+  <div class="panel-bd">
+    <div class="msg-warn">This action opens a new account and cannot be
+      reversed from this screen. Verify the details before confirming.</div><br>
+    <table class="grid" cellspacing="0" style="width:auto">
+      <tr><th>{{ tenant.noun }}</th><td>{{ member.member_no }} &mdash; {{ member.name }}</td></tr>
+      <tr><th>Nickname</th><td>{{ draft.nickname }}</td></tr>
+      <tr><th>Purpose</th><td>{{ draft.purpose }}</td></tr>
+      <tr><th>Initial Deposit</th><td>{{ draft.deposit }} USD</td></tr>
+      <tr><th>Statements</th><td>{{ draft.statements }}</td></tr>
+    </table>
+    <br>
+    {% if needs_override %}
+    <div class="msg-error">
+      Supervisor authorisation is required to open a sub-account on this
+      {{ tenant.noun|lower }} record. Enter a supervisor override code to
+      continue. Override codes are issued to branch supervisors only.
+    </div><br>
+    {% endif %}
+    {% if message %}<div class="msg-error">{{ message }}</div><br>{% endif %}
+    <form method="post" action="{{ confirm_url }}">
+      <table>
+      {% if needs_override %}
+        <tr><td class="fieldlabel">Supervisor Override Code</td>
+            <td><input type="text" name="ctl00$cph1$txtOverride"
+                       id="ctl00_cph1_txtOverride" size="14"></td></tr>
+      {% endif %}
+        <tr><td></td><td><br>
+          <!-- A native window.confirm(), not the maintenance interstitial. That
+               one is a positioned <div> you can click through the DOM; this is
+               a browser-level event with no element to find, so automation that
+               handles the div stalls here with the form never submitted. -->
+          <input type="submit" class="btn" name="ctl00$cph1$btnConfirm"
+                 id="ctl00_cph1_btnConfirm" value="Confirm"
+                 {% if native_confirm %}onclick="return confirm('Open this sub-account? This cannot be undone.');"{% endif %}>
+          &nbsp;<a href="{{ back_url }}">Cancel</a></td></tr>
+      </table>
+    </form>
+  </div>
+</div>
+{% endblock %}

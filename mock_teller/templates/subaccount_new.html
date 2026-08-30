@@ -1,0 +1,46 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="panel">
+  <div class="panel-hd">Open Sub-Account &mdash; {{ tenant.noun }} {{ member.member_no }} ({{ member.name }})</div>
+  <div class="panel-bd">
+    {% if message %}<div class="msg-error">{{ message }}</div><br>{% endif %}
+    <form method="post" action="{{ action_url }}">
+      <table>
+      {# Field ORDER comes from tenant config. Same four fields, different
+         sequence per tenant, so a tab-order or nth-input strategy breaks and a
+         label-anchored one survives. #}
+      {% for f in tenant.subaccount_fields %}
+        {% if f == 'nickname' %}
+        <tr><td class="fieldlabel">Nickname</td>
+            <td><input type="text" name="ctl00$cph1$txtNickname"
+                       id="ctl00_cph1_txtNickname" size="28"
+                       value="{{ values.nickname or '' }}"></td></tr>
+        {% elif f == 'deposit' %}
+        <tr><td class="fieldlabel">Initial Deposit</td>
+            <td><input type="text" name="ctl00$cph1$txtDeposit"
+                       id="ctl00_cph1_txtDeposit" size="12"
+                       value="{{ values.deposit or '' }}"> &nbsp;USD</td></tr>
+        {% elif f == 'purpose' %}
+        <tr><td class="fieldlabel">Purpose</td>
+            <td><select name="ctl00$cph1$ddlPurpose" id="ctl00_cph1_ddlPurpose">
+              <option value="">-- select --</option>
+              {% for p in purposes %}
+              <option value="{{ p }}" {% if values.purpose == p %}selected{% endif %}>{{ p }}</option>
+              {% endfor %}
+            </select></td></tr>
+        {% elif f == 'statements' %}
+        <tr><td class="fieldlabel">Statement Delivery</td>
+            <td><select name="ctl00$cph1$ddlStatements" id="ctl00_cph1_ddlStatements">
+              <option value="Electronic" {% if values.statements == 'Electronic' %}selected{% endif %}>Electronic</option>
+              <option value="Paper" {% if values.statements == 'Paper' %}selected{% endif %}>Paper</option>
+            </select></td></tr>
+        {% endif %}
+      {% endfor %}
+        <tr><td></td><td><br>
+          <input type="submit" class="btn" name="ctl00$cph1$btnContinue"
+                 id="ctl00_cph1_btnContinue" value="Continue"></td></tr>
+      </table>
+    </form>
+  </div>
+</div>
+{% endblock %}

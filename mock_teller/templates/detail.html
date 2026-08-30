@@ -1,0 +1,32 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="panel">
+  <div class="panel-hd">{{ tenant.noun }} {{ member.member_no }} &mdash; {{ member.name }}</div>
+  <div class="panel-bd">
+    <table><tr>
+      <td class="fieldlabel">Date of Birth</td><td class="pii">{{ member.dob }}</td>
+      <td class="fieldlabel">SSN</td><td class="pii">{{ member.ssn }}</td>
+      <td class="fieldlabel">Branch</td><td>{{ member.branch }}</td>
+    </tr></table>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-hd">Account Positions</div>
+  <div class="panel-bd">
+    <!-- The balances live in a child document. Anything that only reads the
+         top-level DOM sees an empty box here. -->
+    <iframe name="detailPane" src="{{ frame_url }}" width="100%" height="220"
+            frameborder="0"></iframe>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="panel-hd">Servicing Actions</div>
+  <div class="panel-bd">
+    <a href="{{ tenant.path(tenant.collection, member.member_no, 'subaccounts/new') }}">Open Sub-Account</a>
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    <a href="/admin/{{ tenant.collection }}/{{ member.member_no }}/close">Close {{ tenant.noun }} Record</a>
+  </div>
+</div>
+{% endblock %}

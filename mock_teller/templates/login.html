@@ -1,0 +1,27 @@
+{% extends "_base.html" %}
+{% block content %}
+<div class="panel" style="width:420px;margin:40px auto;">
+  <div class="panel-hd">Operator Sign On</div>
+  <div class="panel-bd">
+    {% if message %}<div class="msg-error">{{ message }}</div><br>{% endif %}
+    {% if expired %}<div class="msg-warn">Your session has ended due to
+      inactivity. Please sign on again.</div><br>{% endif %}
+    <form method="post" action="{{ tenant.path('login') }}">
+      {% if next_url %}<input type="hidden" name="ctl00$cph1$hidNext" value="{{ next_url }}">{% endif %}
+      <table>
+        <tr><td class="fieldlabel">Operator ID</td>
+            <td><input type="text" name="ctl00$cph1$txtOperator"
+                       id="ctl00_cph1_txtOperator" size="24" value="teller1"></td></tr>
+        <tr><td class="fieldlabel">Password</td>
+            <td><input type="password" name="ctl00$cph1$txtPassword"
+                       id="ctl00_cph1_txtPassword" size="24"></td></tr>
+        <tr><td></td><td><br>
+            <input type="submit" class="btn" name="ctl00$cph1$btnSignOn"
+                   id="ctl00_cph1_btnSignOn" value="Sign On"></td></tr>
+      </table>
+    </form>
+    <br><div class="msg-info">Demo surface. Any password of 4+ characters is
+      accepted. Do not enter real credentials.</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+<html>
+<head>
+  <title>{{ tenant.name }} &mdash; {{ page_title }}</title>
+  <link rel="stylesheet" type="text/css" href="/static/legacy.css">
+</head>
+<body class="{{ tenant.theme }}">
+<!-- Layout is a table because in 2006 it was, and this app has not been
+     touched since. There are no test ids anywhere in this file. -->
+<table width="100%" cellpadding="0" cellspacing="0"><tr><td>
+
+  <table class="masthead" cellpadding="0" cellspacing="0" width="100%"><tr>
+    <td><span class="brand">{{ tenant.name }}</span></td>
+    <td align="right"><span class="verstamp">{{ tenant.product_version }}
+      &nbsp;|&nbsp; {{ today }}
+      {%- if session and session.user %} &nbsp;|&nbsp; {{ session.user }}
+      ({{ session.sid }}){% endif %}</span></td>
+  </tr></table>
+
+  <div class="navbar">
+    <a href="{{ tenant.path(tenant.collection) }}">{{ tenant.noun }} Search</a>
+    <a href="{{ tenant.path('logout') }}">Sign Off</a>
+  </div>
+
+</td></tr><tr><td>
+{% block content %}{% endblock %}
+</td></tr><tr><td>
+  <div class="statusbar">Session {{ session.sid if session else 'none' }}
+    &nbsp;|&nbsp; control: {{ session.actor if session else 'n/a' }}
+    &nbsp;|&nbsp; views: {{ session.page_views if session else 0 }}</div>
+</td></tr></table>
+
+{% if interstitial %}
+<div id="ctl00_shade"></div>
+<div id="ctl00_modal">
+  <div class="panel-hd">Scheduled Maintenance Notice</div>
+  <div class="panel-bd">
+    <p>{{ tenant.name }} will be unavailable Saturday 03:00&ndash;05:00 ET for
+       scheduled maintenance. No action is required.</p>
+    <p align="right">
+      <!-- An anchor, not a button, with the handler inline. Accessible name is
+           the link text; there is nothing else to target it by. -->
+      <a href="{{ dismiss_url }}" onclick="void(0);">Dismiss</a>
+    </p>
+  </div>
+</div>
+{% endif %}
+</body>
+</html>

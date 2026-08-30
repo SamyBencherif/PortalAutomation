@@ -1,0 +1,15 @@
+<html>
+<head><title>Server Error</title>
+<link rel="stylesheet" type="text/css" href="/static/legacy.css"></head>
+<body class="{{ tenant.theme }}">
+<div class="panel"><div class="panel-hd">Server Error in '/CoreTeller' Application</div>
+<div class="panel-bd">
+  <h3 style="color:#a00;margin:4px 0">Unhandled Exception</h3>
+  <div class="sysfault">
+    System.Data.CoreTeller.ServicingException: The servicing request could not be
+    completed.<br>&nbsp;&nbsp; at CoreTeller.Servicing.SubAccountModule.Commit(String
+    memberNo, DraftRequest req)<br>&nbsp;&nbsp; at CoreTeller.Web.ServicingHandler.ProcessRequest(HttpContext ctx)
+    <br><br>Correlation Id: {{ correlation_id }}<br>Route: {{ route }}
+  </div>
+</div></div>
+</body></html>
