@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -54,6 +55,7 @@ class PolicyProxy(BaseHTTPRequestHandler):
     policy: Policy = DEFAULT_POLICY
     audit_path: Path | None = None
     client: httpx.Client | None = None
+    _audit_broken: bool = False
 
     protocol_version = "HTTP/1.1"
     server_version = "cua-policy-proxy"
@@ -62,11 +64,29 @@ class PolicyProxy(BaseHTTPRequestHandler):
 
     @classmethod
     def audit(cls, **fields) -> None:
+        """Record one verdict. Never allowed to break the request.
+
+        Logging is not load-bearing for serving, and wiring it that way is how
+        a guardrail stops guarding. This crashed the whole proxy once: a rebase
+        on the host replaced the `evidence/` directory, the bind mount was left
+        pointing at a deleted inode, and every request died in here before a
+        response was written. The failure direction was at least the safe one --
+        nothing reached the target -- but it presented as "the browser cannot
+        load anything", which is a miserable thing to debug and an outage
+        either way.
+        """
         if cls.audit_path is None:
             return
-        cls.audit_path.parent.mkdir(parents=True, exist_ok=True)
-        with cls.audit_path.open("a") as fh:
-            fh.write(json.dumps({"t": round(time.time(), 3), **fields}) + "\n")
+        try:
+            cls.audit_path.parent.mkdir(parents=True, exist_ok=True)
+            with cls.audit_path.open("a") as fh:
+                fh.write(json.dumps({"t": round(time.time(), 3), **fields}) + "\n")
+        except OSError as e:
+            # Say so once per process rather than per request, then carry on.
+            if not cls._audit_broken:
+                cls._audit_broken = True
+                print(f"[proxy] audit log unwritable ({e}); still enforcing policy",
+                      file=sys.stderr, flush=True)
 
     def log_message(self, fmt: str, *args) -> None:
         # Silence the default stderr chatter; the audit log is the record.
