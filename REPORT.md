@@ -247,9 +247,14 @@ root-owned on the host.
 The loop itself is complete and in `evidence/`: Opus 5 found the flow in 9
 actions from screenshots alone, the recorder produced a 3-step artifact of
 tier-1 label anchors, and that artifact replays with no model across five
-conditions. Two honesty notes on it. Three of the discovery turns were served
-by `claude-opus-4-8` through the refusal fallback, which the artifact's
-provenance records rather than glossing. And the agent never handles
+conditions.
+
+Two notes on it. Driving a bank UI sits close enough to the `cyber` policy that
+the classifier declines intermittently — an earlier recording of the same goal
+had three turns served by `claude-opus-4-8` through the server-side refusal
+fallback, and its provenance said so. The committed run needed no fallback and
+its provenance says that instead; the mechanism stays enabled either way, and
+which happened is recorded rather than assumed. And the agent never handles
 credentials — sign-on is a harness precondition, which began as a response to a
 policy refusal and turned out to be the better design.
 

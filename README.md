@@ -370,14 +370,16 @@ calling agent needs, without reading the step list.
 | Evidence (`evidence/`) | ✅ discovery + five replays, with frames |
 | [`REPORT.md`](REPORT.md) | ✅ |
 
-**The one gap:** the escalation path has not been run end to end against the live surface.
-It needs the write flow — opening a sub-account, where the supervisor-override stuck state
-lives — whose capability has not been discovered yet. The mechanism is covered by
-`tests_cua/test_escalation.py`.
+**The one gap:** the escalation path has not been run end to end against the live surface
+([#4](../../issues/4)). It needs the write flow — opening a sub-account, where the
+supervisor-override stuck state lives — whose capability has not been discovered yet
+([#3](../../issues/3)). The mechanism is covered by `tests_cua/test_escalation.py`.
 
 What happens next, and what is deliberately not being built, is in
-**[ROADMAP.md](ROADMAP.md)**. `scripts/create_issues.py` mirrors it into the issue tracker
-so the two do not drift.
+**[ROADMAP.md](ROADMAP.md)**, tracked as [15 issues across three
+milestones](../../milestones). `scripts/create_issues.py` projects the file into the
+tracker — the file is the source, and re-running it never duplicates — so the two cannot
+drift.
 
 ---
 

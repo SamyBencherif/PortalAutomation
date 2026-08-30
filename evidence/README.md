@@ -30,13 +30,17 @@ The recorder then converted that run into
 target a tier-1 label anchor, none flagged low-confidence, and the literal
 `10001` parameterised to `{member_no}`.
 
-Two things the provenance records honestly:
+Two things the provenance records:
 
-- `recorded_by: llm_discovery`, `model: claude-opus-5` — but the notes also say
-  *"one or more turns served by a refusal fallback model"*. Three of the turns
-  were served by `claude-opus-4-8` after the safety classifier declined. That
-  is recorded rather than glossed, because a capability partly authored by a
-  different model is a materially different provenance claim.
+- `recorded_by: llm_discovery`, `model: claude-opus-5`, and notes reading
+  `9 model actions; stop_reason='end_turn'` — with **no** refusal-fallback
+  note, because this run needed none. Driving a bank UI sits close enough to
+  the `cyber` policy that the classifier declines intermittently: an earlier
+  recording of the same goal had three of its turns served by
+  `claude-opus-4-8` through the server-side fallback, and its provenance said
+  so. The fallback is still enabled; this run simply did not hit it. The
+  distinction is recorded rather than assumed, because a capability partly
+  authored by a different model is a materially different provenance claim.
 - `approval: draft`. A model proposing a flow is not a human accepting one.
 
 **The agent never handles credentials.** Sign-on is a harness precondition
