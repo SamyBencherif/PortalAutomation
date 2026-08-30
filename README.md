@@ -25,8 +25,13 @@ value, and it forces the central design problem — see
 - An `ANTHROPIC_API_KEY` (for the discovery run only)
 
 ```bash
-cp .env.example .env      # then put your key in it; .env is gitignored
+cp .env.example .env      # repo root, NOT docker/; .env is gitignored
 ```
+
+It has to be the repo root. Compose's `${VAR}` interpolation would read `.env`
+from the directory holding the compose file (`docker/`), so the service uses an
+explicit `env_file: ../.env` instead. Every command except `discover` runs
+without a key.
 
 ### Run without Docker or a key
 
@@ -39,7 +44,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt -r requirements-cua.txt
 sudo apt-get install tesseract-ocr      # or: pacman -S tesseract tesseract-data-eng
 
-.venv/bin/python -m pytest tests/ tests_cua/ -q     # 108 tests, ~19s
+.venv/bin/python -m pytest tests/ tests_cua/ -q     # 121 tests, ~28s
 ```
 
 `tests/` covers the target application; `tests_cua/` covers the automation.
@@ -93,40 +98,51 @@ whose targeting could not be validated, for review before approval.
 
 ```bash
 python -m cua.cli replay member.read_savings_balance@1.0.0 \
-  --param member_no=10001 --reset
+  --param member_no=10001 --param operator=teller1 --param password=hunter2 --reset
 ```
 
 ```
-[OK] member.read_savings_balance@1.0.0  (5 steps)
+[OK] member.read_savings_balance@1.0.0  (7 steps)
   outputs:
     savings_balance = 4,182.55
-  evidence: evidence/runs/replay-…
+  evidence: evidence/runs/replay-20260830-155559
 ```
+
+That balance is inside an iframe. Screenshot perception never notices, because
+pixels have no document tree.
 
 ### 3. The interesting replays
 
 Each is a different *kind* of result, not a different error message:
 
+`CREDS` below is `--param operator=teller1 --param password=hunter2`.
+
 ```bash
 # A legitimate answer, not a failure.
-python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=99999 --reset
+python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=99999 $CREDS --reset
 #   [OUTCOME] RECORD_NOT_FOUND
 
 # A permission denial is also an answer.
-python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=10003 --reset
+python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=10003 $CREDS --reset
+#   [OUTCOME] PERMISSION_DENIED
 
-# Recoverable: a transient 503 and a maintenance interstitial, absorbed.
+# Recoverable: transient 503s and maintenance interstitials, absorbed.
 python -m cua.cli replay member.read_savings_balance@1.0.0 \
-  --param member_no=10001 --profile flaky --reset
+  --param member_no=10001 $CREDS --profile flaky --reset
+#   [OK] ... recovered: 3x MAINTENANCE_INTERSTITIAL, 2x SERVICE_BUSY
 
-# A hard failure, with the correlation id needed to debug it.
-python -m cua.cli replay member.read_savings_balance@1.0.0 \
-  --param member_no=10001 --profile broken --reset
-#   [FAILED] SERVER_FAULT
+# A hard failure. `broken` faults the commit route, which the READ flow never
+# touches, so arm the search route instead:
+python -c "import httpx; httpx.post('http://target:8800/_control/scenario', \
+  json={'profile':'clean','overrides':{'error_500_on':['search']}}, \
+  headers={'content-type':'application/json'})"
+python -m cua.cli replay member.read_savings_balance@1.0.0 --param member_no=10001 $CREDS
+#   [FAILED] SERVER_FAULT at step 3
 
 # Stuck -> a human takes over the live session, then hands it back.
+# Needs the write-flow capability, which needs the discovery run first.
 python -m cua.cli replay member.open_subaccount@1.0.0 \
-  --param member_no=10005 --allow-irreversible --operator-console --reset
+  --param member_no=10005 $CREDS --allow-irreversible --operator-console --reset
 #   [ESCALATED] -> open http://localhost:8080, act in the embedded live view,
 #   click "Hand control back", and the run resumes on the same session.
 ```

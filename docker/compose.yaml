@@ -23,14 +23,24 @@ services:
       dockerfile: docker/Dockerfile.workbench
     depends_on: [target]
     networks: [bank]
+    # The API key comes from a gitignored .env at the REPO root, not next to
+    # this file. Compose's own `${VAR}` interpolation reads .env from the
+    # project directory -- which is `docker/`, since that is where this file
+    # lives -- so relying on interpolation would silently want the secret in a
+    # surprising place, and resolve to an empty string when it wasn't there.
+    # env_file takes an explicit path, so the conventional location works.
+    # `required: false` keeps every non-discovery command runnable without it.
+    env_file:
+      - path: ../.env
+        required: false
     environment:
       DISPLAY: ":99"
       CUA_TARGET: "http://target:8800"
       CUA_VNC_URL: "http://localhost:6080/vnc.html"
       CUA_BROWSER_WINDOW: "Chromium"
-      # Supplied from a gitignored .env. Never written into an artifact or a
-      # run log -- see safety.policy.
-      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY:-}"
+      # ANTHROPIC_API_KEY is deliberately NOT listed here: a key in
+      # `environment` overrides env_file, so an unset one would blank it out.
+      # It is never written into an artifact or a run log -- see safety.policy.
     ports:
       - "6080:6080"    # noVNC -- the operator's view of the agent's display
       - "5900:5900"    # raw VNC, for a native client
