@@ -9,8 +9,9 @@ anywhere in this system. An LLM is given a goal and a screen, works the UI out f
 and what gets "recorded" is the agent's own successful run — reduced to a typed capability 
 artifact.
 
-That artifact then replays deterministically with no model in the loop. All three halves
-are working and evidenced in [`evidence/`](evidence/).
+That artifact then replays deterministically with no model in the loop. Discovery,
+recording and replay all work today: [`evidence/`](evidence/) holds the discovery run and
+five replays, and [`capabilities/`](capabilities/) the artifact that sits between them.
 
 ---
 
