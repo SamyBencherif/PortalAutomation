@@ -175,7 +175,26 @@ in this capture because noVNC had not finished connecting.)*
 
 Control is a single flag with one owner at a time, and the automation genuinely blocks
 while the human works — any design where it keeps acting produces two actors racing on one
-session.
+session. Coming back means *continuing*: the run resumes at the step the human unblocked,
+not from the top, because for the flows that actually escalate a second pass would re-drive
+an irreversible write.
+
+**Being told it is your turn is part of the mechanism.** A handoff nobody notices is a run
+that blocks until it times out. Two routes, and a run can use either or both:
+
+- the console this run serves moves the browser tab title when it needs someone, which
+  reaches whoever already has it open on this machine;
+- and the run publishes to a **cross-run queue** (`cua operator`, port 8090) that outlives
+  every run, so an operator who did not launch anything sees the work list, claims one
+  exclusively — two people must not take over the same display — and is named in that run's
+  evidence when they hand control back. Set `CUA_NOTIFY_WEBHOOK` and raising an
+  intervention also POSTs off the machine, which is the difference between an unattended
+  replay and an unwatched one.
+
+The queue is in memory, so a dispatcher restart forgets the work list; runs blocked on it
+time out the way they would have anyway. And the compose file runs one workbench, so the
+per-run display URL the queue carries is only exercised by one run at a time — the queue
+holds it per intervention precisely so more workbenches would not need a change here.
 
 The transfer is also announced to the application, which makes that evidence independent of
 anything this system writes. `POST /_control/handoff` doesn't create a session, swap
@@ -257,7 +276,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt -r requirements-cua.txt
 sudo pacman -S tesseract tesseract-data-eng      # or: apt-get install tesseract-ocr
 
-.venv/bin/python -m pytest tests/ tests_cua/ -q  # 134 tests
+.venv/bin/python -m pytest tests/ tests_cua/ -q  # 153 tests
 ```
 
 ### The whole thing
@@ -275,7 +294,8 @@ directory (`docker/`), so the service takes an explicit `env_file: ../.env` inst
 |---|---|
 | the application, for your own eyes | <http://localhost:8800> |
 | **the agent's live screen** (noVNC) | <http://localhost:6080/vnc.html> |
-| operator takeover console | <http://localhost:8080> |
+| operator takeover console (this run, dies with it) | <http://localhost:8080> |
+| operator queue (every run, outlives them) | <http://localhost:8090> |
 
 To satisfy yourself the thing works rather than take this document's word for it,
 **[MANUAL_TESTING.md](MANUAL_TESTING.md)** is a walkthrough with the expected output at
@@ -366,12 +386,12 @@ calling agent needs, without reading the step list.
 | Piece | State |
 |---|---|
 | Target surface (`mock_teller/`) | ✅ 30 tests, byte-identical across resets |
-| Sandbox image + lifecycle | ✅ two services, `docker compose up` |
+| Sandbox image + lifecycle | ✅ three services, `docker compose up` |
 | Agent loop (observe → decide → act) | ✅ real Opus 5 run, 9 actions, screenshots only |
 | Artifact schema | ✅ typed, versioned, self-validating targets |
 | Deterministic replay engine | ✅ four-way result contract, no model in the loop |
 | Guardrails (proxy allowlist, redaction, approval) | ✅ evidenced |
-| Escalation + live-session handoff | ✅ mechanism + tests — ⚠️ no end-to-end run yet |
+| Escalation + live-session handoff | ✅ mechanism, cross-run queue, tests — ⚠️ no end-to-end run yet |
 | Evidence (`evidence/`) | ✅ discovery + five replays, with frames |
 | [`REPORT.md`](REPORT.md) | ✅ |
 
@@ -400,7 +420,7 @@ cua/             the automation system
   safety/          policy rules, pixel redaction, and the enforcing proxy
   escalation/      control transfer and the operator console
 mock_teller/     the hostile target surface (see its README)
-docker/          two services: target, workbench
+docker/          three services: target, workbench, dispatcher
 capabilities/    recorded artifacts, one file per version
 evidence/        the discovery run, five replays, frames, proxy audit
 docs/media/      screenshots

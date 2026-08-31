@@ -60,6 +60,14 @@ class InterventionRequest:
     # What the human did, in their words. Recorded so the run's evidence
     # explains the gap rather than leaving an unexplained jump in the log.
     operator_note: str | None = None
+    # Who did it. Empty when the run was resumed through its own console,
+    # which has no identity to offer -- the difference between "a human" and a
+    # named one is exactly what the shared queue adds.
+    operator: str = ""
+    # This intervention's id on the cross-run queue, when there is one. The
+    # run and the queue number their interventions independently, so the two
+    # ids differ and the run needs to keep the mapping to poll.
+    queue_id: str | None = None
 
     @property
     def pending(self) -> bool:
@@ -71,7 +79,8 @@ class InterventionRequest:
             "step": self.step, "intent": self.intent, "reason": self.reason,
             "code": self.code, "frame": self.frame,
             "raised_at": self.raised_at, "resolved_at": self.resolved_at,
-            "operator_note": self.operator_note,
+            "operator_note": self.operator_note, "operator": self.operator,
+            "queue_id": self.queue_id,
         }
 
 
@@ -83,10 +92,18 @@ class Broker:
         target_base: str = "http://target:8800",
         vnc_url: str = "http://localhost:6080/vnc.html",
         log: Any = None,
+        dispatcher: str | None = None,
+        poll_interval: float = 2.0,
     ) -> None:
         self.target_base = target_base.rstrip("/")
         self.vnc_url = vnc_url
         self.log = log
+        # The cross-run queue, when this run has one to publish to. Optional
+        # by design: a run started with its own console is still a complete
+        # escalation path, and the recorded evidence depends on that staying
+        # true. The queue adds reach, it does not replace the mechanism.
+        self.dispatcher = dispatcher.rstrip("/") if dispatcher else None
+        self.poll_interval = poll_interval
         self.controller = AGENT
         self.requests: dict[str, InterventionRequest] = {}
         self._resume = threading.Event()
@@ -147,13 +164,45 @@ class Broker:
 
         self.controller = HUMAN
         handoff = self._tell_target(HUMAN)
+        queued = self._publish(req)
         if self.log is not None:
             self.log.event(
                 "intervention_raised", id=req.id, code=req.code, step=req.step,
                 reason=req.reason, vnc=self.vnc_url,
-                target_ack=bool(handoff),
+                target_ack=bool(handoff), queued_as=req.queue_id,
             )
+            if self.dispatcher and not queued:
+                # Worth its own line. The run is about to block for the whole
+                # escalation timeout on a queue that never heard about it, and
+                # "nobody came" would otherwise be indistinguishable from
+                # "nobody was told".
+                self.log.event("queue_unreachable", id=req.id,
+                               dispatcher=self.dispatcher)
         return req
+
+    def _publish(self, req: InterventionRequest) -> bool:
+        """Put this request on the cross-run queue, if there is one.
+
+        Best-effort, like the target announcement: a dispatcher that is down
+        must not take the run down with it. The run falls back to its own
+        console, which is exactly the situation it would have been in without
+        a queue at all.
+        """
+        if self.dispatcher is None:
+            return False
+        try:
+            r = httpx.post(
+                f"{self.dispatcher}/interventions",
+                json={**req.to_dict(), "vnc_url": self.vnc_url},
+                headers={"content-type": "application/json"},
+                timeout=5.0,
+            )
+            if r.status_code != 201:
+                return False
+            req.queue_id = r.json().get("id")
+            return req.queue_id is not None
+        except (httpx.HTTPError, ValueError):
+            return False
 
     def wait_for_resume(self, timeout: float | None = None) -> bool:
         """Block while the human works. Returns False if they never came back.
@@ -162,23 +211,92 @@ class Broker:
         and acting while a human is typing produces two actors racing on one
         session, which is worse than either alone.
         """
-        got_it = self._resume.wait(timeout)
+        got_it = (self._await_queue(timeout) if self.dispatcher
+                  else self._resume.wait(timeout))
         if self.log is not None:
-            self.log.event("resume_wait_finished", resumed=got_it)
+            self.log.event("resume_wait_finished", resumed=got_it,
+                           via="queue" if self.dispatcher else "console")
         return got_it
 
-    def resume(self, request_id: str, note: str | None = None) -> bool:
+    def _await_queue(self, timeout: float | None) -> bool:
+        """Poll the cross-run queue until someone hands control back.
+
+        The run does the polling rather than the dispatcher calling back,
+        because a callback would need every replay container to be addressable
+        *from* the dispatcher -- a firewall conversation rather than a design.
+
+        It waits on the local Event between polls rather than sleeping, so a
+        resume through this run's own console still ends the wait immediately.
+        Both routes stay live and whichever fires first wins.
+        """
+        deadline = None if timeout is None else time.time() + timeout
+        while True:
+            if self._resume.wait(self.poll_interval):
+                # resume() only sets this after reconciling a published
+                # request with the dispatcher, so a local console cannot race
+                # an operator who is already working the queue item.
+                return True
+            for req in self.pending:
+                _, done = self._fetch(req)
+                if done is not None:
+                    self._complete_resume(req, note=done.get("note"),
+                                          operator=done.get("resolved_by", ""))
+                    return True
+            if deadline is not None and time.time() >= deadline:
+                return False
+
+    def _fetch(
+        self, req: InterventionRequest,
+    ) -> tuple[bool, dict[str, Any] | None]:
+        """Return whether the queue retains a request and any resolution.
+
+        A failed lookup is treated conservatively as retained: only an
+        explicit 404 proves that the dispatcher no longer owns the request.
+        """
+        if self.dispatcher is None or req.queue_id is None:
+            return False, None
+        try:
+            r = httpx.get(f"{self.dispatcher}/interventions/{req.queue_id}",
+                          timeout=5.0)
+            if r.status_code == 404:
+                return False, None
+            if r.status_code != 200:
+                return True, None
+            item = r.json()
+            return True, None if item.get("pending", True) else item
+        except (httpx.HTTPError, ValueError):
+            return True, None
+
+    def resume(self, request_id: str, note: str | None = None,
+               operator: str = "") -> bool:
         """The human hands control back."""
         req = self.requests.get(request_id)
         if req is None or not req.pending:
             return False
+
+        if req.queue_id is not None:
+            retained, done = self._fetch(req)
+            if retained:
+                if done is None:
+                    return False
+                # The queue is authoritative once publication succeeds.
+                note = done.get("note")
+                operator = done.get("resolved_by", "")
+
+        return self._complete_resume(req, note=note, operator=operator)
+
+    def _complete_resume(self, req: InterventionRequest,
+                         note: str | None = None, operator: str = "") -> bool:
+        """Record a handback after its queue ownership has been settled."""
         req.resolved_at = time.time()
         req.operator_note = note
+        req.operator = operator
 
         self.controller = AGENT
         self._tell_target(AGENT)
         if self.log is not None:
             self.log.event("control_returned", id=req.id, note=note,
+                           operator=operator or None,
                            held_for_s=round(req.resolved_at - req.raised_at, 1))
         self._resume.set()
         return True

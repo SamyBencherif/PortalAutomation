@@ -27,7 +27,10 @@ The end-to-end loop, evidenced in [`evidence/`](evidence/):
   a tab-title indicator that tells the operator it is their turn, and a resume
   that continues from the step the human unblocked rather than re-driving the
   run from the top.
-- 134 tests.
+- Reaching an operator who is not already watching: a cross-run queue that
+  outlives any run, exclusive claiming under a named identity that reaches the
+  run's evidence, and a webhook off the machine.
+- 153 tests.
 
 ---
 
@@ -107,43 +110,32 @@ records the outcome as "nobody came" rather than "a human decided not to".
 Those are different facts and the evidence should not conflate them. Wants an
 Abandon button beside Resume, a reason, and a distinct terminal status.
 
-### 12. Notify an operator who is not already watching
-The console moves its tab title when an intervention is raised, which is enough
-for one person who has the page open on the machine that launched the run. It is
-not enough for the deployment this system is aimed at, where the operator did not
-start the run, has no terminal to watch, and may be covering several at once. The
-run meanwhile blocks for `--escalation-timeout` and then reports that nobody
-came. Needs the three things that are missing together, because none of them is
-useful alone: a queue spanning runs, an operator identity to route to, and one
-outbound channel off the machine. That last one is also what makes an unattended
-replay honestly unattended rather than merely unwatched.
-
 ---
 
 ## M3 — Scale to the real environment
 
-### 13. Per-tenant override layers
+### 12. Per-tenant override layers
 `REPORT.md` names this as the highest-value remaining item. A base artifact plus a thin
 per-variant patch, so hundreds of tenants running one vendor product do not mean
 hundreds of recordings. The schema was shaped for it (`AppRef`, aliases); the
 base-plus-patch machinery is unbuilt. Informed by item 5.
 
-### 14. Fleet-wide drift reporting
+### 13. Fleet-wide drift reporting
 Replay already reports which tier resolved each target. Aggregated across tenants that
 becomes "which capabilities are degrading, where" — the signal that tells you to
 re-record *before* something breaks rather than after.
 
-### 15. Expose the catalogue as a callable surface
+### 14. Expose the catalogue as a callable surface
 `cua catalog --json` already emits the contract an agent needs. Making it an actual
 tool/function-calling endpoint is the difference between "an agent could invoke this"
 and "an agent does".
 
-### 16. Bounded, policy-checked LLM recovery for a single step
+### 15. Bounded, policy-checked LLM recovery for a single step
 Attractive and dangerous, so it is late and tightly scoped: one step, policy-checked,
 recorded as evidence. Open-ended recovery would destroy the determinism that is the
 entire point.
 
-### 17. A second `Surface` implementation
+### 16. A second `Surface` implementation
 The abstraction is the argument for heterogeneity; an implementation would be the
 proof. A native desktop app is the honest test, since it has no DOM to fall back to.
 
@@ -161,8 +153,13 @@ Listed so they are not mistaken for oversights:
   per-capability, per-tenant authorisation with an approver identity.
 - **The sandbox is a container, not a VM.** No machine snapshot/restore, no hypervisor
   network fence. `README.md` says what a VM would add.
-- **The operator console is minimal by design.** No cross-run queue, no operator
-  identity. The brief permits mocking it; the mechanism behind it is real.
+- **The operator queue is in memory.** A dispatcher restart forgets the work
+  list. Runs blocked on it time out the way they would have anyway, but the
+  operator loses the list. `Queue` is the seam a persistent one replaces.
+- **A typed operator name identifies, it does not authenticate.** It says who
+  acted, for the audit trail. Anyone who can reach the queue can claim as
+  anyone. Real deployment wants the identity to come from wherever the bank's
+  already does.
 - **`__VIEWSTATE` round-tripping is absent from the target.** It is the most authentic
   legacy mechanism left unbuilt, and would *prove* replay drives the UI rather than
   forging HTTP requests.

@@ -37,6 +37,10 @@ from cua.safety.policy import DEFAULT_POLICY, Policy
 TARGET = os.environ.get("CUA_TARGET", "http://target:8800")
 VNC_URL = os.environ.get("CUA_VNC_URL", "http://localhost:6080/vnc.html")
 CONSOLE_PORT = int(os.environ.get("CUA_CONSOLE_PORT", "8080"))
+QUEUE_PORT = int(os.environ.get("CUA_QUEUE_PORT", "8090"))
+# Where a run publishes interventions so an operator who did not launch it can
+# be told. Unset means the run escalates to its own console only.
+DISPATCHER = os.environ.get("CUA_DISPATCHER", "").strip() or None
 
 
 def _surface():
@@ -155,7 +159,9 @@ def cmd_replay(args) -> int:
                   overrides=overrides,
                   session=armed.get("session") if isinstance(armed, dict) else None)
 
-    broker = Broker(target_base=TARGET, vnc_url=VNC_URL, log=log)
+    dispatcher = args.dispatcher or DISPATCHER
+    broker = Broker(target_base=TARGET, vnc_url=VNC_URL, log=log,
+                    dispatcher=dispatcher)
     engine = ReplayEngine(
         surface, _policy(args), log,
         credentials=(args.operator, args.password),
@@ -165,6 +171,13 @@ def cmd_replay(args) -> int:
     if args.operator_console:
         serve_in_background(broker, CONSOLE_PORT)
         print(f"operator console: http://localhost:{CONSOLE_PORT}/", file=sys.stderr)
+    if dispatcher:
+        print(f"escalations also queued to {dispatcher}", file=sys.stderr)
+
+    # Either route means somebody can answer, so either is reason to wait. A
+    # run with a queue and no local console is the unattended case: nobody is
+    # watching this terminal, and that is precisely what the queue is for.
+    attended = bool(args.operator_console or dispatcher)
 
     result = engine.run(cap, params)
 
@@ -174,7 +187,7 @@ def cmd_replay(args) -> int:
     # same step with the same code stops rather than being handed back again.
     handoffs = 0
     seen: set[tuple[int, str]] = set()
-    while result.status == "escalated" and args.operator_console:
+    while result.status == "escalated" and attended:
         signature = (result.outcome["step"], result.outcome["code"])
         if signature in seen:
             print("  escalated again at the same step -- not handing back "
@@ -189,7 +202,11 @@ def cmd_replay(args) -> int:
 
         print("\n  ESCALATED -- waiting for a human to take control.", file=sys.stderr)
         print(f"  {result.outcome['message']}", file=sys.stderr)
-        print(f"  Take over at http://localhost:{CONSOLE_PORT}/\n", file=sys.stderr)
+        if args.operator_console:
+            print(f"  Take over at http://localhost:{CONSOLE_PORT}/", file=sys.stderr)
+        if dispatcher:
+            print(f"  Queued for an operator at {dispatcher}/", file=sys.stderr)
+        print("", file=sys.stderr)
         if not broker.wait_for_resume(timeout=args.escalation_timeout):
             print("  nobody took over within the timeout", file=sys.stderr)
             break
@@ -197,8 +214,10 @@ def cmd_replay(args) -> int:
         # Resume on the SAME session the human just operated, and from the step
         # they unblocked -- not from the top, which would re-drive everything
         # the run already did.
-        note = broker.last_resolved.operator_note if broker.last_resolved else None
-        print(f"  control returned; resuming from step "
+        handback = broker.last_resolved
+        note = handback.operator_note if handback else None
+        by = f" by {handback.operator}" if handback and handback.operator else ""
+        print(f"  control returned{by}; resuming from step "
               f"{result.outcome['step']}\n", file=sys.stderr)
         result = engine.resume(cap, params, result, operator_note=note)
 
@@ -385,11 +404,34 @@ def cmd_approve(args) -> int:
 
 
 def cmd_operator(args) -> int:
+    """Serve the cross-run queue.
+
+    Previously this served a single-run console over a Broker no run would ever
+    reach, so it could not show anything -- the useful console was the one a
+    replay serves in its own process. Standalone only makes sense for something
+    that outlives a run, which is what the queue is.
+    """
     import uvicorn
 
-    from cua.escalation.console import build
-    broker = Broker(target_base=TARGET, vnc_url=VNC_URL)
-    uvicorn.run(build(broker), host="0.0.0.0", port=args.port, log_level="info")
+    from cua.escalation import notify
+    from cua.escalation.dispatcher import build
+    from cua.escalation.queue import Queue
+
+    # Where an operator reaches this queue, which is what the notification
+    # links to. Deliberately not derived from the bind address: inside a
+    # container that is 0.0.0.0:8090, and a link to that reaches nobody.
+    console_url = (args.console_url or os.environ.get("CUA_CONSOLE_URL", "").strip()
+                   or f"http://localhost:{args.port}")
+    notifier = notify.from_env(console_url=console_url)
+    if notifier is None:
+        print("no CUA_NOTIFY_WEBHOOK set -- the queue will not reach anyone "
+              "who is not looking at it", file=sys.stderr)
+    else:
+        print(f"raised interventions will be announced to {notifier.url}",
+              file=sys.stderr)
+
+    uvicorn.run(build(Queue(notify=notifier)), host="0.0.0.0", port=args.port,
+                log_level="info")
     return 0
 
 
@@ -445,6 +487,9 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--escalation-timeout", type=float, default=600.0)
     r.add_argument("--max-handoffs", type=int, default=2,
                    help="how many times one run may be handed to a human")
+    r.add_argument("--dispatcher", default=None,
+                   help="cross-run operator queue to publish escalations to "
+                        "(default: $CUA_DISPATCHER)")
     r.set_defaults(func=cmd_replay)
 
     c = sub.add_parser("catalog", help="what an agent could invoke")
@@ -456,8 +501,10 @@ def build_parser() -> argparse.ArgumentParser:
     a.add_argument("--force", action="store_true")
     a.set_defaults(func=cmd_approve)
 
-    o = sub.add_parser("operator", help="run the takeover console standalone")
-    o.add_argument("--port", type=int, default=CONSOLE_PORT)
+    o = sub.add_parser("operator", help="serve the cross-run operator queue")
+    o.add_argument("--port", type=int, default=QUEUE_PORT)
+    o.add_argument("--console-url", default=None,
+                   help="how operators reach this queue, for notification links")
     o.set_defaults(func=cmd_operator)
 
     return ap
