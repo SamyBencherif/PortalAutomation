@@ -66,6 +66,10 @@ class ReplayResult:
     # artifact is drifting and should be re-recorded before it breaks.
     drift: list[dict[str, Any]] = field(default_factory=list)
     steps_executed: int = 0
+    # Step indices a human unblocked and handed back. Non-empty means this
+    # result is the tail of a run that was escalated at least once, and the
+    # evidence for the earlier legs is carried in `recovered` and `drift`.
+    resumed_from: list[int] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -126,6 +130,7 @@ class ReplayEngine:
         self.recovered: list[dict[str, Any]] = []
         self.drift: list[dict[str, Any]] = []
         self._budget = MAX_RECOVERIES_PER_RUN
+        self._reset()
 
     # ------------------------------------------------------------ observing
 
@@ -358,10 +363,85 @@ class ReplayEngine:
     # ----------------------------------------------------------- execution
 
     def run(self, cap: Capability, params: dict[str, str]) -> ReplayResult:
+        """Replay the capability from its first step."""
+        self._reset()
         result = ReplayResult(status="failed", capability=cap.ref, run_id=self.log.run_id)
         self.log.event("replay_started", capability=cap.ref,
                        approval=cap.approval.value, params=sorted(params))
+        return self._execute(cap, params, result, start=0)
 
+    def resume(
+        self,
+        cap: Capability,
+        params: dict[str, str],
+        escalated: ReplayResult,
+        operator_note: str | None = None,
+    ) -> ReplayResult:
+        """Continue an escalated run from the step the human just unblocked.
+
+        The point of escalating rather than failing is that the run is paused,
+        not broken -- so coming back has to mean *continuing*, not starting
+        over. Re-running from step 1 would re-drive every step the run already
+        completed, and for the capabilities that actually escalate that
+        includes an irreversible write. One resumed step is a bounded risk; a
+        whole second pass over an irreversible flow is not.
+
+        Where it restarts depends on where the escalation fired relative to the
+        action, and the two cases are genuinely different:
+
+        - `POLICY_BLOCKED` is raised *before* the step runs. The human took the
+          display and performed that step themselves, so the automation picks
+          up at the next one. Re-attempting it would only hit the same gate
+          again, forever.
+        - A runtime `STUCK` signature is raised on a screen the step could not
+          get past -- the supervisor-code demand being the case this exists
+          for. The human cleared the blocking condition; the step itself still
+          needs doing, so it is re-attempted. If the human happened to complete
+          it too, the target answers a duplicate with its original receipt and
+          the taxonomy reads that as a business outcome.
+
+        The earlier legs' evidence is carried forward, but the recovery budget
+        is granted fresh: a human just changed the situation, and holding the
+        resumed leg to what the stuck one had left is punishing it for the
+        problem it was rescued from.
+        """
+        if escalated.status != "escalated" or not escalated.outcome:
+            raise ValueError("resume() takes the result of an escalated run")
+
+        stuck_at = int(escalated.outcome["step"])
+        positions = [i for i, s in enumerate(cap.steps) if s.index == stuck_at]
+        if not positions:
+            raise ValueError(f"{cap.ref} has no step {stuck_at} to resume from")
+        start = positions[0]
+
+        delegated = escalated.outcome.get("code") == "POLICY_BLOCKED"
+        if delegated:
+            start += 1
+
+        self._reset(recovered=escalated.recovered, drift=escalated.drift)
+        result = ReplayResult(
+            status="failed", capability=cap.ref, run_id=self.log.run_id,
+            steps_executed=escalated.steps_executed,
+            resumed_from=[*escalated.resumed_from, stuck_at],
+        )
+        self.log.event(
+            "replay_resumed", capability=cap.ref, escalated_at=stuck_at,
+            code=escalated.outcome.get("code"),
+            # Skipped because a human did it on the same display, not because
+            # the gate was lifted. Saying which is the whole value of the line.
+            step_delegated_to_operator=delegated,
+            resuming_at=cap.steps[start].index if start < len(cap.steps) else None,
+            operator_note=operator_note,
+        )
+        return self._execute(cap, params, result, start=start)
+
+    def _execute(
+        self,
+        cap: Capability,
+        params: dict[str, str],
+        result: ReplayResult,
+        start: int,
+    ) -> ReplayResult:
         try:
             values = validate_params(cap, params)
         except ParamError as e:
@@ -369,7 +449,7 @@ class ReplayEngine:
             self.log.event("param_error", error=str(e))
             return self._finish(result)
 
-        for step in cap.steps:
+        for step in cap.steps[start:]:
             verdict = self.policy.check_step(step, cap)
             if not verdict.allowed:
                 # A blocked irreversible step is not a crash -- a human can
@@ -546,6 +626,22 @@ class ReplayEngine:
                 "code": code, "frame": str(shot),
             })
         return result
+
+    def _reset(
+        self,
+        recovered: list[dict[str, Any]] | None = None,
+        drift: list[dict[str, Any]] | None = None,
+    ) -> None:
+        """Start a leg. Called per run, not per engine.
+
+        The engine outlives a single run -- a resumed run reuses it -- so state
+        that is scoped to a run has to be cleared here rather than trusted to
+        __init__. The recovery budget especially: a second leg inheriting a
+        spent budget would fail on the first interstitial it met.
+        """
+        self.recovered = list(recovered or [])
+        self.drift = list(drift or [])
+        self._budget = MAX_RECOVERIES_PER_RUN
 
     def _finish(self, result: ReplayResult) -> ReplayResult:
         result.recovered = self.recovered

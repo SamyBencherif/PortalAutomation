@@ -177,3 +177,18 @@ def test_an_idle_console_says_the_automation_holds_control(broker):
     page = client.get("/")
     assert "No interventions pending" in page.text
     assert AGENT in page.text
+
+
+def test_the_run_can_find_out_what_the_operator_did(broker):
+    """The resuming run needs the note, to write it into its own evidence."""
+    assert broker.last_resolved is None, "nothing has been handed back yet"
+
+    first = broker.raise_intervention(CONTEXT)
+    assert broker.last_resolved is None, "a pending request is not a resolved one"
+    broker.resume(first.id, note="entered supervisor override SUP-4471")
+    assert broker.last_resolved is first
+
+    second = broker.raise_intervention({**CONTEXT, "step": 5})
+    broker.resume(second.id, note="dismissed the stale lock")
+    assert broker.last_resolved is second, "the most recent handoff is the one that counts"
+    assert broker.last_resolved.operator_note == "dismissed the stale lock"
