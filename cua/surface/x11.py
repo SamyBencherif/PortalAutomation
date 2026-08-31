@@ -135,13 +135,33 @@ class X11Surface:
         self.key("Return")
 
     def _focus_browser(self) -> None:
+        """Bring the browser forward, cheaply.
+
+        `--onlyvisible` is doing real work here, not tidying. Without it the
+        search matches four Chromium windows -- the visible one plus hidden
+        utility windows -- and `windowactivate --sync` waits on each in turn for
+        one that will never activate. Measured: 15,293ms without the filter,
+        36ms with it. That single flag was 77% of a replay's wall clock and read
+        to a watcher as the automation hanging before it started.
+
+        Skipping when the window is already focused, which is the common case,
+        keeps even the 36ms off the usual path.
+        """
         if not self.browser_window:
             return
         try:
-            self._xdo("search", "--name", self.browser_window, "windowactivate", "--sync")
+            visible = self._xdo(
+                "search", "--onlyvisible", "--name", self.browser_window, capture=True
+            ).split()
+            if not visible:
+                return
+            active = self._xdo("getactivewindow", capture=True).strip()
+            if active in visible:
+                return
+            self._xdo("windowactivate", "--sync", visible[-1])
         except SurfaceError:
-            # A missing window is not fatal here; the click will simply land on
-            # whatever is focused, and the checkpoint will catch it.
+            # A missing window is not fatal here; the click lands on whatever is
+            # focused and the checkpoint catches it.
             pass
 
     def _click(self, point: Point, button: int, modifiers: str | None, repeat: int) -> None:

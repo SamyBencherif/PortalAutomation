@@ -60,12 +60,16 @@ class PolicyProxy(BaseHTTPRequestHandler):
 
     # ------------------------------------------------------------- logging
 
-    @classmethod
-    def audit(cls, **fields) -> None:
-        if cls.audit_path is None:
+    def audit(self, **fields) -> None:
+        """Append one verdict to the audit log.
+
+        `serve` resolves the log to an absolute path and creates its directory
+        before the server starts, so this append does not depend on the
+        process's current working directory and simply works.
+        """
+        if self.audit_path is None:
             return
-        cls.audit_path.parent.mkdir(parents=True, exist_ok=True)
-        with cls.audit_path.open("a") as fh:
+        with self.audit_path.open("a") as fh:
             fh.write(json.dumps({"t": round(time.time(), 3), **fields}) + "\n")
 
     def log_message(self, fmt: str, *args) -> None:
@@ -149,7 +153,12 @@ def serve(
     audit_path: str | Path | None = None,
 ) -> ThreadingHTTPServer:
     PolicyProxy.policy = policy or DEFAULT_POLICY
-    PolicyProxy.audit_path = Path(audit_path) if audit_path else None
+    if audit_path:
+        resolved = Path(audit_path).resolve()
+        resolved.parent.mkdir(parents=True, exist_ok=True)
+        PolicyProxy.audit_path = resolved
+    else:
+        PolicyProxy.audit_path = None
     PolicyProxy.client = httpx.Client(timeout=30.0)
     return ThreadingHTTPServer(("0.0.0.0", port), PolicyProxy)
 
