@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -55,45 +54,23 @@ class PolicyProxy(BaseHTTPRequestHandler):
     policy: Policy = DEFAULT_POLICY
     audit_path: Path | None = None
     client: httpx.Client | None = None
-    _audit_broken: bool = False
 
     protocol_version = "HTTP/1.1"
     server_version = "cua-policy-proxy"
 
     # ------------------------------------------------------------- logging
 
-    @classmethod
-    def audit(cls, **fields) -> None:
-        """Record one verdict. Never allowed to break the request.
+    def audit(self, **fields) -> None:
+        """Append one verdict to the audit log.
 
-        Logging is not load-bearing for serving, and wiring it that way is how
-        a guardrail stops guarding. This did take the whole proxy down once:
-        every request died in here on `FileNotFoundError` for the audit path --
-        from an *append* open, which creates the file -- before any response was
-        written. The failure direction was at least the safe one, since nothing
-        reached the target, but it presented as "the browser cannot load
-        anything", which is a miserable place to start debugging from.
-
-        The trigger was not identified. The obvious suspect was the container's
-        bind mount going stale after a host-side rebase replaced the directory,
-        but that was tested directly and does something else entirely: the
-        container keeps writing happily into the old inode and the host sees an
-        empty directory. Silent divergence, not an error. So the cause here
-        remains open, which is exactly why the handler is defensive rather than
-        fixed against one story about what went wrong.
+        `serve` resolves the log to an absolute path and creates its directory
+        before the server starts, so this append does not depend on the
+        process's current working directory and simply works.
         """
-        if cls.audit_path is None:
+        if self.audit_path is None:
             return
-        try:
-            cls.audit_path.parent.mkdir(parents=True, exist_ok=True)
-            with cls.audit_path.open("a") as fh:
-                fh.write(json.dumps({"t": round(time.time(), 3), **fields}) + "\n")
-        except OSError as e:
-            # Say so once per process rather than per request, then carry on.
-            if not cls._audit_broken:
-                cls._audit_broken = True
-                print(f"[proxy] audit log unwritable ({e}); still enforcing policy",
-                      file=sys.stderr, flush=True)
+        with self.audit_path.open("a") as fh:
+            fh.write(json.dumps({"t": round(time.time(), 3), **fields}) + "\n")
 
     def log_message(self, fmt: str, *args) -> None:
         # Silence the default stderr chatter; the audit log is the record.
@@ -176,7 +153,12 @@ def serve(
     audit_path: str | Path | None = None,
 ) -> ThreadingHTTPServer:
     PolicyProxy.policy = policy or DEFAULT_POLICY
-    PolicyProxy.audit_path = Path(audit_path) if audit_path else None
+    if audit_path:
+        resolved = Path(audit_path).resolve()
+        resolved.parent.mkdir(parents=True, exist_ok=True)
+        PolicyProxy.audit_path = resolved
+    else:
+        PolicyProxy.audit_path = None
     PolicyProxy.client = httpx.Client(timeout=30.0)
     return ThreadingHTTPServer(("0.0.0.0", port), PolicyProxy)
 
