@@ -410,6 +410,9 @@ class ReplayEngine:
 
         stuck_at = int(escalated.outcome["step"])
         positions = [i for i, s in enumerate(cap.steps) if s.index == stuck_at]
+        if len(positions) != 1:
+            raise ValueError(f"{cap.ref} has an ambiguous or missing step {stuck_at}")
+        start = positions[0]
         if not positions:
             raise ValueError(f"{cap.ref} has no step {stuck_at} to resume from")
         start = positions[0]
