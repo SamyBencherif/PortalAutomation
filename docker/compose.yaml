@@ -1,8 +1,9 @@
-# Two services, because the split mirrors the real thing: the bank application
-# is somewhere else, and the automation reaches it over a network it does not
-# control. Keeping them separate is also what makes the allowlist meaningful --
-# `target` is a distinct host that the workbench's proxy either lets through or
-# does not.
+# Three services, because each split mirrors something real. The bank
+# application is somewhere else and the automation reaches it over a network it
+# does not control -- keeping `target` a distinct host is what makes the
+# allowlist meaningful, since the workbench's proxy either lets it through or
+# does not. And the operator queue is somewhere else again, because it has to
+# outlive any one run to be worth anything.
 services:
 
   # The legacy application under automation. Stands in for a core banking
@@ -38,13 +39,16 @@ services:
       CUA_TARGET: "http://target:8800"
       CUA_VNC_URL: "http://localhost:6080/vnc.html"
       CUA_BROWSER_WINDOW: "Chromium"
+      # Escalations go to the cross-run queue as well as to this run's own
+      # console, so an operator who did not launch the run can answer.
+      CUA_DISPATCHER: "http://dispatcher:8090"
       # ANTHROPIC_API_KEY is deliberately NOT listed here: a key in
       # `environment` overrides env_file, so an unset one would blank it out.
       # It is never written into an artifact or a run log -- see safety.policy.
     ports:
       - "6080:6080"    # noVNC -- the operator's view of the agent's display
       - "5900:5900"    # raw VNC, for a native client
-      - "8080:8080"    # operator console
+      - "8080:8080"    # operator console, served by a run and dying with it
     volumes:
       # Live source, and evidence/artifacts land on the host where they can be
       # reviewed and committed.
@@ -56,6 +60,40 @@ services:
     shm_size: "1gb"
     stdin_open: true
     tty: true
+
+  # The operator's queue, and the only service here that outlives a run.
+  #
+  # Separate from `workbench` because that is the whole point: a console served
+  # by a run dies with it and is reachable only by whoever started it. This one
+  # is somewhere an operator can already be sitting when a run they did not
+  # launch asks for them.
+  #
+  # It reuses the workbench image rather than adding a third Dockerfile. That
+  # image carries a whole X stack this service never starts, which is waste --
+  # but it is *built* waste, shared with a service that is already being built,
+  # against dependencies that are by construction the same ones the runs use.
+  # A separate image would drift.
+  dispatcher:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.workbench
+    # Straight to the queue: no display, no browser, no proxy.
+    entrypoint: ["python", "-m", "cua.cli", "operator"]
+    networks: [bank]
+    env_file:
+      - path: ../.env
+        required: false
+    environment:
+      CUA_QUEUE_PORT: "8090"
+      # How an operator reaches this queue, which is what a notification links
+      # to. The host's side of the published port, not the container's: the
+      # person reading the message is not on this network.
+      CUA_CONSOLE_URL: "http://localhost:8090"
+      # CUA_NOTIFY_WEBHOOK comes from ../.env when it is set. Without it the
+      # queue still works and still reaches nobody who is not looking at it.
+    ports: ["8090:8090"]
+    volumes:
+      - ../cua:/app/cua:ro
 
 networks:
   bank:

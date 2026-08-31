@@ -198,13 +198,33 @@ it. It polls rather than refreshing on a timer, because the page embeds the
 agent's live display and a clock-driven reload would drop the noVNC connection
 mid-drag and mid-sentence.
 
-The operator console itself is deliberately thin: one page, a live view, a
-Resume button and a note field. What is missing is product, not mechanism — that
-tab title is the only notification surface, so it reaches exactly one person who
-already has the page open on the machine that launched the run; there is no
-cross-run queue, no operator identity to route to, no per-action audit of what
-the human did beyond their note, and no way for an operator to end a run they
-have looked at and decided should not continue.
+**Reaching an operator who is not already watching** is a separate problem, and
+the tab title does not solve it — it reaches one person, on the machine that
+launched the run. So a run also publishes to a cross-run queue that outlives it.
+The three things that were missing arrive together because none is useful alone:
+a work list spanning runs, an identity to route to, and a channel off the
+machine. Claiming is exclusive — two operators covering a fleet must not both
+take over the same X display — and the claimant's name lands in that run's
+evidence beside their note, because a note signed by nobody is an anecdote. The
+outbound channel is a webhook and nothing else; Slack, PagerDuty and the rest
+all sit behind one, and picking a vendor here would buy an SDK, a credential and
+a mock in exchange for nothing.
+
+The run polls the queue rather than the queue calling back. A callback would
+need every replay container to be addressable *from* the dispatcher, which is a
+firewall conversation rather than a design; the run already reaches out to the
+target and now to the queue. Both routes stay live at once, so whichever of a
+local console and a remote operator answers first wins, and a dispatcher that is
+down leaves the run exactly where it would have been without a queue — its own
+console, with `queue_unreachable` in the log so that "nobody came" and "nobody
+was told" stay distinguishable.
+
+The operator surfaces are deliberately thin: one page each, a live view, a claim
+and a note field. What is missing is product, not mechanism — the queue is in
+memory, so a restart forgets the work list; there is no operator authentication,
+since a typed name identifies who acted and does not authorise them; no
+per-action audit of what the human did beyond their note; and no way for an
+operator to end a run they have looked at and decided should not continue.
 
 ## 6. Safety
 
