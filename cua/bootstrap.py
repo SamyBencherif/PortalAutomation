@@ -25,6 +25,8 @@ current savings balance" -- likewise begins after sign-on.
 
 from __future__ import annotations
 
+import time
+
 from cua.artifact.schema import Relation, Target, TextAnchor
 from cua.perception import anchor as anchor_mod
 from cua.perception import ocr
@@ -44,6 +46,23 @@ def _click(surface: Surface, text: str, relation: Relation, offset: int = 60):
     return resolution
 
 
+def _await_text(surface: Surface, text: str, timeout: float = 10.0) -> bool:
+    """Wait until `text` is on screen, or give up.
+
+    Replaces a fixed sleep. A constant is wrong in both directions: too short
+    and the page is not up yet, too long and every run pays for the worst case
+    on every step. Polling costs one OCR pass per attempt and returns the
+    moment the screen is ready.
+    """
+    deadline = time.time() + timeout
+    while True:
+        if ocr.read(surface.observe().png).contains(text):
+            return True
+        if time.time() >= deadline:
+            return False
+        surface.wait(0.3)
+
+
 def sign_on(
     surface: Surface,
     entry_url: str,
@@ -61,7 +80,9 @@ def sign_on(
     for attempt in range(1, attempts + 1):
         try:
             surface.navigate(entry_url)
-            surface.wait(2.0)
+            if not _await_text(surface, "Operator Sign On"):
+                last = "sign-on screen never appeared"
+                continue
 
             _click(surface, "Operator ID", Relation.RIGHT_OF)
             surface.key("ctrl+a")
@@ -72,10 +93,8 @@ def sign_on(
             surface.type_text(password)
 
             _click(surface, "Sign On", Relation.ON)
-            surface.wait(2.0)
 
-            screen = ocr.read(surface.observe().png)
-            if screen.contains(landing):
+            if _await_text(surface, landing):
                 return
             last = f"signed on but did not reach {landing!r}"
         except (anchor_mod.UnresolvedTarget, SurfaceError) as e:
