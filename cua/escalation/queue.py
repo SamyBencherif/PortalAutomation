@@ -37,6 +37,13 @@ from typing import Any, Callable
 UNCLAIMED = ""
 
 
+def _as_int(value: Any, default: int = -1) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 class QueueError(Exception):
     """An operator asked for something the queue will not do."""
 
@@ -115,7 +122,7 @@ class Queue:
                 id=f"q-{self._seq:04d}",
                 capability=str(payload.get("capability", "?")),
                 run_id=str(payload.get("run_id", "?")),
-                step=int(payload.get("step", -1)),
+                step=_as_int(payload.get("step", -1)),
                 intent=str(payload.get("intent", "")),
                 reason=str(payload.get("reason", "")),
                 code=str(payload.get("code", "STUCK")),
@@ -186,12 +193,16 @@ class Queue:
     @property
     def open(self) -> list[QueuedIntervention]:
         """Oldest first: the run that has been blocked longest goes first."""
-        return sorted((i for i in self._items.values() if i.pending),
+        with self._lock:
+            items = list(self._items.values())
+        return sorted((i for i in items if i.pending),
                       key=lambda i: i.raised_at)
 
     @property
     def all(self) -> list[QueuedIntervention]:
-        return sorted(self._items.values(), key=lambda i: i.raised_at)
+        with self._lock:
+            items = list(self._items.values())
+        return sorted(items, key=lambda i: i.raised_at)
 
     def for_run(self, run_id: str) -> list[QueuedIntervention]:
         return [i for i in self.all if i.run_id == run_id]

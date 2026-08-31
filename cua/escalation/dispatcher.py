@@ -19,6 +19,7 @@ covering a fleet cannot both take over the same display.
 
 from __future__ import annotations
 
+from html import escape
 import threading
 from typing import Any
 
@@ -121,9 +122,9 @@ def _history(items: list[QueuedIntervention]) -> str:
     if not done:
         return ""
     rows = "".join(
-        f"<tr><td>{i.id}</td><td><code>{i.run_id}</code></td>"
-        f"<td>{i.code}</td><td>{i.resolved_by}</td>"
-        f"<td>{i.note or ''}</td><td>{i.waited_s}s</td></tr>"
+        f"<tr><td>{escape(i.id)}</td><td><code>{escape(i.run_id)}</code></td>"
+        f"<td>{escape(i.code)}</td><td>{escape(i.resolved_by)}</td>"
+        f"<td>{escape(i.note or '')}</td><td>{escape(str(i.waited_s))}s</td></tr>"
         for i in reversed(done)
     )
     return ("<div class='card'><b>Handed back</b><table>"
@@ -157,20 +158,27 @@ def build(queue: Queue) -> FastAPI:
         cards = []
         for item in open_items:
             mine = item.claimed_by == operator and bool(operator)
+            fields = {
+                key: escape(str(value), quote=True)
+                for key, value in item.to_dict().items()
+            }
             cards.append(ITEM.format(
                 css="mine" if mine else ("held" if item.claimed else ""),
-                held=(f" &mdash; held by {item.claimed_by}" if item.claimed else ""),
-                action=(WORKING if mine else CLAIM).format(**item.to_dict()),
-                **item.to_dict(),
+                held=(f" &mdash; held by {escape(item.claimed_by)}"
+                      if item.claimed else ""),
+                action=(WORKING if mine else CLAIM).format(**fields),
+                **fields,
             ))
+        escaped_operator = escape(operator, quote=True)
         return PAGE.format(
             style=STYLE, script=SCRIPT,
             title=(f"({len(open_items)}) Take over — Operator queue"
                    if open_items else "Operator queue"),
-            waiting=len(open_items), operator=operator,
-            who=f"signed in as {operator}" if operator else "not signed in",
-            open_ids=",".join(i.id for i in open_items),
-            items=(ERROR.format(message=error) if error else "")
+            waiting=len(open_items), operator=escaped_operator,
+            who=(f"signed in as {escaped_operator}"
+                 if operator else "not signed in"),
+            open_ids=escape(",".join(i.id for i in open_items), quote=True),
+            items=(ERROR.format(message=escape(error)) if error else "")
                   + ("".join(cards) or NOTHING),
             history=_history(queue.all),
         )

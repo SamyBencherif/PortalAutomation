@@ -50,7 +50,7 @@ class Webhook:
                            headers={"content-type": "application/json"},
                            timeout=self.timeout)
             ok = 200 <= r.status_code < 300
-        except httpx.HTTPError as e:
+        except (httpx.HTTPError, httpx.InvalidURL) as e:
             ok, r = False, None
             self._log("notify_failed", id=item.id, error=str(e))
         if r is not None and not ok:

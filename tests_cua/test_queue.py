@@ -86,6 +86,11 @@ def test_the_longest_blocked_run_is_listed_first(queue):
     assert [i.id for i in queue.open] == [first.id, second.id]
 
 
+@pytest.mark.parametrize("step", [None, "not-a-number"])
+def test_a_malformed_step_uses_the_unknown_default(queue, step):
+    assert queue.add({**RAISED, "step": step}).step == -1
+
+
 def test_two_operators_cannot_take_the_same_display(queue):
     item = queue.add(RAISED)
     queue.claim(item.id, "sam")
@@ -172,6 +177,16 @@ def test_a_dead_notification_channel_does_not_lose_the_intervention(log):
     assert any(e["event"] == "notify_failed" for e in log.events())
 
 
+def test_a_malformed_notification_url_does_not_lose_the_intervention(log):
+    hook = notify.Webhook("http://example.com:not-a-port", log=log)
+    queue = Queue(notify=hook)
+
+    item = queue.add(RAISED)
+
+    assert queue.open == [item]
+    assert any(e["event"] == "notify_failed" for e in log.events())
+
+
 def test_no_configured_channel_is_no_channel_rather_than_a_broken_one(monkeypatch):
     monkeypatch.delenv("CUA_NOTIFY_WEBHOOK", raising=False)
     assert notify.from_env() is None
@@ -244,6 +259,28 @@ def test_handed_back_work_stays_visible_with_who_did_it(queue):
     page = client.get("/").text
     assert "Handed back" in page
     assert "sam" in page and "entered SUP-4471" in page
+
+
+def test_dispatcher_escapes_queue_and_query_values(queue):
+    client = TestClient(build(queue))
+    item = queue.add({
+        **RAISED,
+        "run_id": '<script>alert("run")</script>',
+        "reason": '<img src=x onerror="alert(1)">',
+        "vnc_url": 'https://vnc.example/" onload="alert(2)',
+    })
+
+    page = client.get(
+        "/", params={"operator": '"><script>alert("operator")</script>',
+                     "error": "<b>failed</b>"},
+    ).text
+
+    assert "<script>alert" not in page
+    assert "<img src=x" not in page
+    assert 'onload="alert' not in page
+    assert "<b>failed</b>" not in page
+    assert "&lt;script&gt;alert" in page
+    assert f'value="{item.id}"' in page
 
 
 # ------------------------------------------- a different process, for real
@@ -319,3 +356,38 @@ def test_a_run_survives_a_queue_that_is_not_there(log):
     # without a queue at all.
     assert broker.resume(req.id, note="took over locally") is True
     assert broker.wait_for_resume(timeout=1.0) is True
+
+
+def test_local_console_cannot_resume_a_published_queue_item(dispatcher, log):
+    broker = Broker(target_base="http://127.0.0.1:9", log=log,
+                    dispatcher=dispatcher, poll_interval=0.1)
+    req = broker.raise_intervention(RAISED)
+    assert req.queue_id
+
+    httpx.post(f"{dispatcher}/claim",
+               data={"item_id": req.queue_id, "operator": "sam"},
+               follow_redirects=False)
+
+    assert broker.resume(req.id, note="local handback") is False
+    assert req.pending
+    assert broker.controller == HUMAN
+
+
+def test_local_console_recovers_after_dispatcher_forgets_item(log, monkeypatch):
+    broker = Broker(target_base="http://127.0.0.1:9", log=log)
+    req = broker.raise_intervention(RAISED)
+    broker.dispatcher = "http://dispatcher"
+    req.queue_id = "q-forgotten"
+
+    class Missing:
+        status_code = 404
+
+    real_get = httpx.get
+    monkeypatch.setattr(
+        httpx, "get",
+        lambda url, **kwargs: Missing() if url.startswith(broker.dispatcher)
+        else real_get(url, **kwargs),
+    )
+
+    assert broker.resume(req.id, note="handled locally") is True
+    assert req.operator_note == "handled locally"

@@ -37,7 +37,6 @@ services:
     environment:
       DISPLAY: ":99"
       CUA_TARGET: "http://target:8800"
-      CUA_VNC_URL: "http://localhost:6080/vnc.html"
       CUA_BROWSER_WINDOW: "Chromium"
       # Escalations go to the cross-run queue as well as to this run's own
       # console, so an operator who did not launch the run can answer.
@@ -85,10 +84,8 @@ services:
         required: false
     environment:
       CUA_QUEUE_PORT: "8090"
-      # How an operator reaches this queue, which is what a notification links
-      # to. The host's side of the published port, not the container's: the
-      # person reading the message is not on this network.
-      CUA_CONSOLE_URL: "http://localhost:8090"
+      # CUA_CONSOLE_URL comes from ../.env so deployments can advertise the
+      # externally reachable dispatcher host to webhook recipients.
       # CUA_NOTIFY_WEBHOOK comes from ../.env when it is set. Without it the
       # queue still works and still reaches nobody who is not looking at it.
     ports: ["8090:8090"]

@@ -232,29 +232,40 @@ class Broker:
         deadline = None if timeout is None else time.time() + timeout
         while True:
             if self._resume.wait(self.poll_interval):
+                # resume() only sets this after reconciling a published
+                # request with the dispatcher, so a local console cannot race
+                # an operator who is already working the queue item.
                 return True
             for req in self.pending:
-                done = self._fetch(req)
+                _, done = self._fetch(req)
                 if done is not None:
-                    self.resume(req.id, note=done.get("note"),
-                                operator=done.get("resolved_by", ""))
+                    self._complete_resume(req, note=done.get("note"),
+                                          operator=done.get("resolved_by", ""))
                     return True
             if deadline is not None and time.time() >= deadline:
                 return False
 
-    def _fetch(self, req: InterventionRequest) -> dict[str, Any] | None:
-        """The queue's view of one request, once it has been handed back."""
+    def _fetch(
+        self, req: InterventionRequest,
+    ) -> tuple[bool, dict[str, Any] | None]:
+        """Return whether the queue retains a request and any resolution.
+
+        A failed lookup is treated conservatively as retained: only an
+        explicit 404 proves that the dispatcher no longer owns the request.
+        """
         if self.dispatcher is None or req.queue_id is None:
-            return None
+            return False, None
         try:
             r = httpx.get(f"{self.dispatcher}/interventions/{req.queue_id}",
                           timeout=5.0)
+            if r.status_code == 404:
+                return False, None
             if r.status_code != 200:
-                return None
+                return True, None
             item = r.json()
-            return None if item.get("pending", True) else item
+            return True, None if item.get("pending", True) else item
         except (httpx.HTTPError, ValueError):
-            return None
+            return True, None
 
     def resume(self, request_id: str, note: str | None = None,
                operator: str = "") -> bool:
@@ -262,6 +273,21 @@ class Broker:
         req = self.requests.get(request_id)
         if req is None or not req.pending:
             return False
+
+        if req.queue_id is not None:
+            retained, done = self._fetch(req)
+            if retained:
+                if done is None:
+                    return False
+                # The queue is authoritative once publication succeeds.
+                note = done.get("note")
+                operator = done.get("resolved_by", "")
+
+        return self._complete_resume(req, note=note, operator=operator)
+
+    def _complete_resume(self, req: InterventionRequest,
+                         note: str | None = None, operator: str = "") -> bool:
+        """Record a handback after its queue ownership has been settled."""
         req.resolved_at = time.time()
         req.operator_note = note
         req.operator = operator
