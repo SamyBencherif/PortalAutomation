@@ -67,13 +67,20 @@ class PolicyProxy(BaseHTTPRequestHandler):
         """Record one verdict. Never allowed to break the request.
 
         Logging is not load-bearing for serving, and wiring it that way is how
-        a guardrail stops guarding. This crashed the whole proxy once: a rebase
-        on the host replaced the `evidence/` directory, the bind mount was left
-        pointing at a deleted inode, and every request died in here before a
-        response was written. The failure direction was at least the safe one --
-        nothing reached the target -- but it presented as "the browser cannot
-        load anything", which is a miserable thing to debug and an outage
-        either way.
+        a guardrail stops guarding. This did take the whole proxy down once:
+        every request died in here on `FileNotFoundError` for the audit path --
+        from an *append* open, which creates the file -- before any response was
+        written. The failure direction was at least the safe one, since nothing
+        reached the target, but it presented as "the browser cannot load
+        anything", which is a miserable place to start debugging from.
+
+        The trigger was not identified. The obvious suspect was the container's
+        bind mount going stale after a host-side rebase replaced the directory,
+        but that was tested directly and does something else entirely: the
+        container keeps writing happily into the old inode and the host sees an
+        empty directory. Silent divergence, not an error. So the cause here
+        remains open, which is exactly why the handler is defensive rather than
+        fixed against one story about what went wrong.
         """
         if cls.audit_path is None:
             return

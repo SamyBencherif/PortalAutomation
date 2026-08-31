@@ -242,15 +242,37 @@ run; when that happens the artifact's provenance records it. If a run stops with
 
 ## Troubleshooting
 
-**Everything through the proxy returns an empty reply, or the browser cannot
-load anything.** A git operation on the host — `rebase`, `reset --hard`, a
-branch switch — replaced a bind-mounted directory, and the container is still
-pointed at the deleted inode. The symptom surfaces somewhere unrelated, possibly
-hours later.
+**Evidence or capability files written by a run never appear on the host, and
+the container insists they exist.** A git operation — `rebase`, `reset --hard`,
+a branch switch — deleted and recreated a bind-mounted directory on the host.
+Docker binds by **inode, not path**, so the container keeps reading and writing
+the old directory while the host looks at a new, empty one. Nothing errors.
+Both sides are internally consistent and silently disagree, which is why this is
+worth knowing about before it wastes an afternoon.
+
+Verified: renaming the host directory is harmless — the mount follows the inode
+and the container carries on with the same data. Deleting and recreating it is
+what splits them.
 
 ```bash
 docker compose -f docker/compose.yaml up -d --force-recreate workbench
 ```
+
+To check rather than guess:
+
+```bash
+stat -c '%i' evidence
+docker compose -f docker/compose.yaml exec workbench stat -c '%i' /app/evidence
+```
+
+Matching inodes mean the mount is healthy.
+
+**Everything through the proxy returns an empty reply, or the browser cannot
+load anything.** Seen once, cause not identified — the proxy was dying while
+writing its audit log, before sending any response. It no longer can: an
+unwritable audit log is reported once and policy keeps being enforced. If it
+recurs, `docker compose logs workbench` will show what the audit write is
+failing on, and that is worth reporting rather than working around.
 
 **Evidence files are owned by root.** The container runs as root, so files it
 writes are root-owned on the host. Tracked as issue #10.
