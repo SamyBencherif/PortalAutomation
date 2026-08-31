@@ -298,3 +298,16 @@
 {"t": 1788133934.486, "method": "POST", "url": "http://update.googleapis.com/service/update2/json?cup2key=16:a7khUxVpKAFXffoAG2C_TU1DMZ5AnKuUslw_3qfV2Gs&cup2hreq=41f191487576174433b32e0750086fad330f11dff406c0abb6628ba909b4c92d", "host": "update.googleapis.com", "path": "/service/update2/json", "allowed": false, "reason": "host 'update.googleapis.com' is not on the allowlist"}
 {"t": 1788133961.276, "method": "CONNECT", "url": "android.clients.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
 {"t": 1788133984.537, "method": "CONNECT", "url": "accounts.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134049.448, "method": "CONNECT", "url": "android.clients.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134052.79, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134125.496, "method": "CONNECT", "url": "safebrowsing.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134207.338, "method": "CONNECT", "url": "accounts.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134218.075, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134275.0, "method": "CONNECT", "url": "android.clients.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134369.797, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134546.124, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134713.522, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788134750.48, "method": "CONNECT", "url": "android.clients.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788135597.238, "method": "CONNECT", "url": "accounts.google.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788135605.818, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}
+{"t": 1788135770.976, "method": "CONNECT", "url": "optimizationguide-pa.googleapis.com:443", "allowed": false, "reason": "CONNECT tunnelling is not permitted"}

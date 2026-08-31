@@ -277,6 +277,11 @@ directory (`docker/`), so the service takes an explicit `env_file: ../.env` inst
 | **the agent's live screen** (noVNC) | <http://localhost:6080/vnc.html> |
 | operator takeover console | <http://localhost:8080> |
 
+To satisfy yourself the thing works rather than take this document's word for it,
+**[MANUAL_TESTING.md](MANUAL_TESTING.md)** is a walkthrough with the expected output at
+each step — including the one guardrail check whose obvious version gives the wrong
+answer.
+
 ---
 
 ## Demo path
