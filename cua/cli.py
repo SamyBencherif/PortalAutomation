@@ -168,16 +168,39 @@ def cmd_replay(args) -> int:
 
     result = engine.run(cap, params)
 
-    if result.status == "escalated" and args.operator_console:
+    # A run may need a human more than once -- a flow can be blocked on policy
+    # and then get stuck -- but it must not be able to ping-pong forever, so
+    # the number of handoffs is bounded and an escalation that repeats at the
+    # same step with the same code stops rather than being handed back again.
+    handoffs = 0
+    seen: set[tuple[int, str]] = set()
+    while result.status == "escalated" and args.operator_console:
+        signature = (result.outcome["step"], result.outcome["code"])
+        if signature in seen:
+            print("  escalated again at the same step -- not handing back "
+                  "a second time", file=sys.stderr)
+            break
+        if handoffs >= args.max_handoffs:
+            print(f"  escalated after {handoffs} handoff(s); stopping at the "
+                  "limit", file=sys.stderr)
+            break
+        seen.add(signature)
+        handoffs += 1
+
         print("\n  ESCALATED -- waiting for a human to take control.", file=sys.stderr)
         print(f"  {result.outcome['message']}", file=sys.stderr)
         print(f"  Take over at http://localhost:{CONSOLE_PORT}/\n", file=sys.stderr)
-        if broker.wait_for_resume(timeout=args.escalation_timeout):
-            # Resume on the SAME session the human just operated.
-            print("  control returned; resuming\n", file=sys.stderr)
-            result = engine.run(cap, params)
-        else:
+        if not broker.wait_for_resume(timeout=args.escalation_timeout):
             print("  nobody took over within the timeout", file=sys.stderr)
+            break
+
+        # Resume on the SAME session the human just operated, and from the step
+        # they unblocked -- not from the top, which would re-drive everything
+        # the run already did.
+        note = broker.last_resolved.operator_note if broker.last_resolved else None
+        print(f"  control returned; resuming from step "
+              f"{result.outcome['step']}\n", file=sys.stderr)
+        result = engine.resume(cap, params, result, operator_note=note)
 
     # The target's own audit log, saved beside ours. It is independent evidence
     # that a handoff really happened on one continuous session.
@@ -420,6 +443,8 @@ def build_parser() -> argparse.ArgumentParser:
     r.add_argument("--operator-console", action="store_true",
                    help="serve the takeover console and block on escalation")
     r.add_argument("--escalation-timeout", type=float, default=600.0)
+    r.add_argument("--max-handoffs", type=int, default=2,
+                   help="how many times one run may be handed to a human")
     r.set_defaults(func=cmd_replay)
 
     c = sub.add_parser("catalog", help="what an agent could invoke")

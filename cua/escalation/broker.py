@@ -187,6 +187,17 @@ class Broker:
     def pending(self) -> list[InterventionRequest]:
         return [r for r in self.requests.values() if r.pending]
 
+    @property
+    def last_resolved(self) -> InterventionRequest | None:
+        """The handoff that just ended, if one has.
+
+        The run resuming behind it wants the operator's note, so that the
+        evidence says what a human did in the gap rather than leaving an
+        unexplained jump between two steps.
+        """
+        done = [r for r in self.requests.values() if not r.pending]
+        return max(done, key=lambda r: r.resolved_at or 0.0) if done else None
+
     def target_audit(self) -> list[dict[str, Any]]:
         """The application's own view of who did what.
 

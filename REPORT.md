@@ -179,10 +179,32 @@ generous; a log we do not write cannot be. Note the deliberate asymmetry: the
 harness may reach `/_control`, the agent may not — arranging a handoff and
 letting an agent reconfigure its own target are different acts.
 
+**Coming back means continuing.** The point of escalating rather than failing
+is that the run is paused, not broken, so a resume picks up at the step the
+human unblocked — re-running from step 1 would re-drive everything the run had
+already done, which for the flows that actually escalate includes an
+irreversible write. Where it restarts depends on where the escalation fired
+relative to the action: a policy block is raised *before* the step, so the human
+performed that step and the automation resumes after it; a runtime stuck
+signature is raised on a screen the step could not get past, so the step itself
+is re-attempted. Handoffs are bounded, and an escalation that repeats at the
+same step with the same code stops rather than being handed back again.
+
+**Being told it is your turn is part of the mechanism**, not polish: a handoff
+nobody notices is a run that sits blocked until it times out. The console moves
+the browser tab title when an intervention is raised, which reaches an operator
+who has the page open behind their other windows without asking them to watch
+it. It polls rather than refreshing on a timer, because the page embeds the
+agent's live display and a clock-driven reload would drop the noVNC connection
+mid-drag and mid-sentence.
+
 The operator console itself is deliberately thin: one page, a live view, a
-Resume button and a note field. What is missing is product, not mechanism — no
-cross-run queue, no operator identity, no per-action audit of what the human
-did beyond their note.
+Resume button and a note field. What is missing is product, not mechanism — that
+tab title is the only notification surface, so it reaches exactly one person who
+already has the page open on the machine that launched the run; there is no
+cross-run queue, no operator identity to route to, no per-action audit of what
+the human did beyond their note, and no way for an operator to end a run they
+have looked at and decided should not continue.
 
 ## 6. Safety
 

@@ -379,3 +379,138 @@ def test_a_target_that_cannot_be_found_at_all_fails_clearly(log):
     assert result.status == "failed"
     assert result.failure["kind"] == "unresolved_target"
     assert "expected" in result.failure and "observed" in result.failure
+
+
+# ----------------------------------------------------------------- resuming
+
+# Escalating is only worth doing if coming back means *continuing*. A resume
+# that re-runs from step 1 would re-drive every step the run already completed,
+# which for the flows that actually escalate includes an irreversible write --
+# so these assert on where the second leg picks up, not merely that it ran.
+
+INTERSTITIAL = ["Scheduled Maintenance Notice", "Dismiss"]
+OVERRIDE = ["Supervisor override code required."]
+
+
+def _escalate_at_the_type_step(log, before=()):
+    """Run until the supervisor-code demand stops it, and hand back the pieces."""
+    surface = FakeSurface([START, SEARCH, *before, OVERRIDE])
+    engine = ReplayEngine(surface, Policy(), log)
+    result = engine.run(lookup_capability(), {"member_no": "10005"})
+    assert result.status == "escalated", result.to_dict()
+    return engine, surface, result
+
+
+def _human_clears_it(surface):
+    """Stand in for the operator: the blocking screen is gone, mid-flow."""
+    surface.screens = [SEARCH, RESULTS, DETAIL]
+    surface.index = 0
+    surface.actions.clear()
+
+
+def test_a_resumed_run_picks_up_at_the_stuck_step_not_the_top(log):
+    engine, surface, escalated = _escalate_at_the_type_step(log)
+    stuck_at = escalated.outcome["step"]
+    _human_clears_it(surface)
+
+    result = engine.resume(lookup_capability(), {"member_no": "10005"}, escalated)
+
+    assert result.status == "success", result.failure
+    assert result.resumed_from == [stuck_at]
+    assert not [d for what, d in surface.actions if what == "navigate"], (
+        "the resumed leg re-drove a step the first leg had already completed")
+
+
+def test_a_resumed_run_continues_the_first_leg_s_step_count(log):
+    """The count spans the whole run, not just the leg after the human.
+
+    It counts executions rather than distinct steps, so a re-attempted step is
+    counted twice and the total can exceed the capability's step count. That is
+    the truthful reading, and `resumed_from` says why it happened.
+    """
+    engine, surface, escalated = _escalate_at_the_type_step(log)
+    _human_clears_it(surface)
+    result = engine.resume(lookup_capability(), {"member_no": "10005"}, escalated)
+
+    assert escalated.steps_executed == 2      # steps 0 and 1; 1 got stuck
+    assert result.steps_executed == 4         # plus 1 re-attempted, then 2
+    assert result.resumed_from == [1]
+
+
+def test_a_resumed_run_carries_the_earlier_leg_s_evidence(log):
+    """The escalation must not erase what the first leg had to recover from."""
+    engine, surface, escalated = _escalate_at_the_type_step(log, before=[INTERSTITIAL])
+    assert any(r["code"] == "MAINTENANCE_INTERSTITIAL" for r in escalated.recovered)
+    _human_clears_it(surface)
+
+    result = engine.resume(lookup_capability(), {"member_no": "10005"}, escalated)
+
+    assert result.status == "success", result.failure
+    assert any(r["code"] == "MAINTENANCE_INTERSTITIAL" for r in result.recovered)
+
+
+def test_what_the_human_did_is_written_into_the_run_s_own_log(log):
+    """Otherwise the evidence has an unexplained jump between two steps."""
+    engine, surface, escalated = _escalate_at_the_type_step(log)
+    _human_clears_it(surface)
+    engine.resume(lookup_capability(), {"member_no": "10005"}, escalated,
+                  operator_note="entered supervisor override SUP-4471")
+
+    resumed = next(e for e in log.events() if e["event"] == "replay_resumed")
+    assert "SUP-4471" in resumed["operator_note"]
+    assert resumed["escalated_at"] == escalated.outcome["step"]
+    assert resumed["step_delegated_to_operator"] is False
+
+
+def test_a_policy_blocked_step_resumes_after_it_rather_than_retrying_it(log):
+    """The gate is still shut; the human is the one who opened the account.
+
+    Re-attempting the step would hit the same refusal every time, so a run that
+    is handed back would escalate forever instead of finishing.
+    """
+    cap = lookup_capability()
+    cap.steps.append(Step(index=3, intent="commit the new account",
+                          action=Action(kind=ActionKind.CLICK),
+                          risk=Risk.IRREVERSIBLE))
+    surface = FakeSurface(FLOW)
+    engine = ReplayEngine(surface, Policy(allow_irreversible=False), log)
+    escalated = engine.run(cap, {"member_no": "10001"})
+    assert escalated.outcome["code"] == "POLICY_BLOCKED"
+    surface.actions.clear()
+
+    result = engine.resume(cap, {"member_no": "10001"}, escalated,
+                           operator_note="approved and committed by hand")
+
+    assert result.status != "escalated", "handing it back must not re-block it"
+    assert result.status == "success", result.failure
+    assert surface.actions == [], "the human's step was re-driven by the automation"
+    resumed = next(e for e in log.events() if e["event"] == "replay_resumed")
+    assert resumed["step_delegated_to_operator"] is True
+
+
+def test_resume_refuses_a_result_that_was_not_escalated(log):
+    surface = FakeSurface(FLOW)
+    engine = ReplayEngine(surface, Policy(), log)
+    ok = engine.run(lookup_capability(), {"member_no": "10001"})
+    assert ok.status == "success"
+    with pytest.raises(ValueError, match="escalated"):
+        engine.resume(lookup_capability(), {"member_no": "10001"}, ok)
+
+
+def test_each_run_starts_with_its_own_recovery_budget(log):
+    """A second run on the same engine must not inherit a spent budget.
+
+    The engine outlives a single run precisely so a resume can reuse it, which
+    makes run-scoped state leaking between runs a live hazard rather than a
+    theoretical one.
+    """
+    surface = FakeSurface([START, SEARCH, INTERSTITIAL, RESULTS, DETAIL])
+    engine = ReplayEngine(surface, Policy(), log)
+
+    first = engine.run(lookup_capability(), {"member_no": "10001"})
+    surface.index = 0
+    second = engine.run(lookup_capability(), {"member_no": "10001"})
+
+    assert first.status == second.status == "success"
+    assert len(second.recovered) == len(first.recovered), (
+        "the second run reported the first run's recoveries as its own")
