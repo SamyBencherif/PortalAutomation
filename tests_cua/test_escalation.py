@@ -192,3 +192,49 @@ def test_the_run_can_find_out_what_the_operator_did(broker):
     broker.resume(second.id, note="dismissed the stale lock")
     assert broker.last_resolved is second, "the most recent handoff is the one that counts"
     assert broker.last_resolved.operator_note == "dismissed the stale lock"
+
+
+# ------------------------------------------------------- being told it is you
+
+# A handoff nobody notices is a run that sits blocked until it times out, so
+# how the operator finds out is part of the mechanism rather than polish.
+
+def test_an_idle_console_does_not_claim_attention(broker):
+    client = TestClient(build(broker))
+    assert "<title>Operator console</title>" in client.get("/").text
+
+
+def test_the_tab_title_asks_for_the_operator_when_one_is_needed(broker):
+    """The tab is a notification surface they already have open."""
+    broker.raise_intervention(CONTEXT)
+    page = TestClient(build(broker)).get("/").text
+
+    title = page.split("<title>")[1].split("</title>")[0]
+    assert "(1)" in title, "the count has to be in the tab, not just on the page"
+    assert "Take over" in title
+    assert title != "Operator console"
+
+
+def test_the_title_lets_go_once_control_is_handed_back(broker):
+    req = broker.raise_intervention(CONTEXT)
+    client = TestClient(build(broker))
+    broker.resume(req.id, note="done")
+    assert "<title>Operator console</title>" in client.get("/").text
+
+
+def test_the_page_says_what_it_rendered_so_the_poll_can_spot_a_change(broker):
+    req = broker.raise_intervention(CONTEXT)
+    page = TestClient(build(broker)).get("/").text
+    assert f'var RENDERED = "{req.id}"' in page
+
+
+def test_the_live_view_is_not_torn_down_on_a_timer(broker):
+    """A meta refresh would drop the noVNC connection every few seconds.
+
+    Including mid-drag, and including while the operator is typing what they
+    did into the note field -- which is why the poll reloads on a change in
+    what is pending rather than on a clock.
+    """
+    page = TestClient(build(broker)).get("/").text
+    assert "http-equiv" not in page.lower()
+    assert "/state" in page, "nothing is watching for a new intervention"

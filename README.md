@@ -257,7 +257,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt -r requirements-cua.txt
 sudo pacman -S tesseract tesseract-data-eng      # or: apt-get install tesseract-ocr
 
-.venv/bin/python -m pytest tests/ tests_cua/ -q  # 121 tests
+.venv/bin/python -m pytest tests/ tests_cua/ -q  # 134 tests
 ```
 
 ### The whole thing

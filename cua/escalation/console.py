@@ -6,8 +6,15 @@ page with a live view and a Resume button -- and everything behind it is
 genuine: the iframe is noVNC attached to the agent's actual X display, and
 Resume releases the Event the automation is blocked on.
 
-What is missing here is product, not mechanism: no queue across runs, no
-operator identity, no audit of who clicked what beyond the note they type. Each
+Being told it is your turn is part of the mechanism, not polish: a handoff
+nobody notices is a run that sits blocked until it times out. The page moves the
+browser tab title when an intervention is raised, which reaches an operator who
+has this open behind their other windows without asking them to watch it.
+
+What is missing here is product, not mechanism: that title is the *only*
+notification surface, so it reaches exactly one person who already has the page
+open on this machine. No queue across runs, no operator identity, no routing to
+whoever is on duty, no audit of who clicked what beyond the note they type. Each
 of those is a real gap and they are listed in the write-up rather than papered
 over.
 """
@@ -22,7 +29,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from cua.escalation.broker import Broker
 
 PAGE = """<!doctype html>
-<html><head><title>Operator console</title>
+<html><head><title>{title}</title>
 <style>
  body {{ font-family: Verdana, sans-serif; font-size: 12px; margin: 0;
         background: #f4f4f4; color: #111; }}
@@ -47,7 +54,35 @@ PAGE = """<!doctype html>
   session.</p>
   <iframe src="{vnc}"></iframe>
 </div>
-</div></body></html>"""
+</div>
+<script>
+// The operator has to find out it is their turn. Polling /state and moving the
+// tab title is the cheapest thing that reaches someone who is not staring at
+// this tab -- a browser tab is a notification surface they already have open.
+//
+// Deliberately NOT a meta refresh. This page embeds the agent's live display,
+// and a timer that reloads the document tears down the noVNC connection every
+// few seconds -- including mid-drag, and including while the operator is
+// typing what they did into the note field. So the poll only reloads on an
+// actual change in what is pending, which happens when a run raises an
+// intervention (nobody is working yet) or when the operator resumes one (their
+// own click, which navigates anyway).
+var RENDERED = "{rendered}";
+setInterval(function () {{
+  fetch("/state").then(function (r) {{ return r.json(); }}).then(function (s) {{
+    var n = s.pending.length;
+    document.title = n ? "(" + n + ") Take over \u2014 Operator console"
+                       : "Operator console";
+    if (s.pending.map(function (r) {{ return r.id; }}).join(",") !== RENDERED) {{
+      location.reload();
+    }}
+  }}).catch(function () {{
+    // The run ended and took the server with it. Leave the page as it is
+    // rather than blanking the last thing the operator was looking at.
+  }});
+}}, 3000);
+</script>
+</body></html>"""
 
 REQUEST = """<div class="card">
   <b>Intervention {id}</b> &mdash; <code>{code}</code>
@@ -73,8 +108,14 @@ def build(broker: Broker) -> FastAPI:
     def index() -> str:
         pending = broker.pending
         body = "".join(REQUEST.format(**r.to_dict()) for r in pending) or NOTHING
-        return PAGE.format(controller=broker.controller, requests=body,
-                           vnc=broker.vnc_url)
+        return PAGE.format(
+            controller=broker.controller, requests=body, vnc=broker.vnc_url,
+            # In the tab title too, so an operator who has this open behind
+            # their other windows is told rather than having to look.
+            title=(f"({len(pending)}) Take over \u2014 Operator console"
+                   if pending else "Operator console"),
+            rendered=",".join(r.id for r in pending),
+        )
 
     @app.post("/resume")
     def resume(request_id: str = Form(...), note: str = Form("")) -> RedirectResponse:
