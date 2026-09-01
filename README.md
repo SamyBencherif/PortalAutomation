@@ -25,7 +25,7 @@ the environment the brief actually describes.
 keyboard, mouse.** No DOM is ever read. No selector is ever queried. That single decision
 is what the rest of the design falls out of:
 
-- **The DOM is an optimization, not the interface.** The brief says the real surfaces
+- **The DOM is not the interface.** The brief says the real surfaces
   include native desktop apps and that you should bias toward approaches that survive
   *no clean DOM*. A screen-and-input contract survives it by construction. A selector
   strategy does not.
