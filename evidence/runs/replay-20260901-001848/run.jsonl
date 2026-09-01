@@ -1,0 +1,19 @@
+{"t": 1788221928.401, "event": "run_started", "kind": "replay", "run_id": "replay-20260901-001848"}
+{"t": 1788221934.572, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788221934.603, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no"]}
+{"t": 1788221936.062, "event": "frame_captured", "file": "frames/001-step00-escalated.png", "label": "step00-escalated", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788221936.062, "event": "escalated", "step": 0, "code": "POLICY_BLOCKED", "reason": "action 'type' is not permitted"}
+{"t": 1788221936.079, "event": "intervention_raised", "id": "int-001", "code": "POLICY_BLOCKED", "step": 0, "reason": "action 'type' is not permitted", "vnc": "http://localhost:6080/vnc.html", "target_ack": true, "queued_as": "q-0001"}
+{"t": 1788221936.079, "event": "run_finished", "status": "escalated"}
+{"t": 1788221964.211, "event": "control_returned", "id": "int-001", "note": "Entered member number 10001", "operator": "Samy", "held_for_s": 28.1}
+{"t": 1788221964.211, "event": "resume_wait_finished", "resumed": true, "via": "queue"}
+{"t": 1788221964.211, "event": "replay_resumed", "capability": "member.read_savings_balance@1.0.0", "escalated_at": 0, "code": "POLICY_BLOCKED", "step_delegated_to_operator": true, "resuming_at": 1, "operator_note": "Entered member number 10001"}
+{"t": 1788221964.212, "event": "step_started", "index": 1, "intent": "click 'Find'", "action": "click", "risk": "safe"}
+{"t": 1788221965.182, "event": "target_resolved", "index": 1, "tier": "label", "detail": "text -> 'Find' @ 688,287"}
+{"t": 1788221965.285, "event": "step_started", "index": 2, "intent": "click 'view'", "action": "click", "risk": "safe"}
+{"t": 1788221966.287, "event": "target_resolved", "index": 2, "tier": "label", "detail": "text -> 'view' @ 1430,439"}
+{"t": 1788221968.367, "event": "frame_captured", "file": "frames/002-step02.png", "label": "step02", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788221970.355, "event": "frame_captured", "file": "frames/003-final.png", "label": "final", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788221970.355, "event": "output_extracted", "name": "savings_balance", "value": "4,182.55"}
+{"t": 1788221970.355, "event": "replay_succeeded", "outputs": ["savings_balance"]}
+{"t": 1788221970.355, "event": "run_finished", "status": "success"}

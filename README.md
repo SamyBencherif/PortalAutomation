@@ -10,8 +10,9 @@ and what gets "recorded" is the agent's own successful run — reduced to a type
 artifact.
 
 That artifact then replays deterministically with no model in the loop. Discovery,
-recording and replay all work today: [`evidence/`](evidence/) holds the discovery run and
-five replays, and [`capabilities/`](capabilities/) the artifact that sits between them.
+recording and replay all work today: [`evidence/`](evidence/) holds the discovery run,
+five replays and three live operator handoffs, and [`capabilities/`](capabilities/) the
+artifact that sits between them.
 
 ---
 
@@ -290,7 +291,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt -r requirements-cua.txt
 sudo pacman -S tesseract tesseract-data-eng      # or: apt-get install tesseract-ocr
 
-.venv/bin/python -m pytest tests/ tests_cua/ -q  # 153 tests
+.venv/bin/python -m pytest tests/ tests_cua/ -q  # 164 tests
 ```
 
 ### The whole thing
@@ -405,14 +406,21 @@ calling agent needs, without reading the step list.
 | Artifact schema | ✅ typed, versioned, self-validating targets |
 | Deterministic replay engine | ✅ four-way result contract, no model in the loop |
 | Guardrails (proxy allowlist, redaction, approval) | ✅ evidenced |
-| Escalation + live-session handoff | ✅ mechanism, cross-run queue, tests — ⚠️ no end-to-end run yet |
-| Evidence (`evidence/`) | ✅ discovery + five replays, with frames |
+| Escalation + live-session handoff | ✅ mechanism, cross-run queue, tests, three live runs |
+| Evidence (`evidence/`) | ✅ discovery + five replays + three handoffs, with frames |
 | [`REPORT.md`](REPORT.md) | ✅ |
 
-**The one gap:** the escalation path has not been run end to end against the live surface
-([#4](../../issues/4)). It needs the write flow — opening a sub-account, where the
-supervisor-override stuck state lives — whose capability has not been discovered yet
-([#3](../../issues/3)). The mechanism is covered by `tests_cua/test_escalation.py`.
+**The remaining gap:** the escalation path has never been driven by the stuck state it
+was designed for. Member `10005` demands a supervisor override on an irreversible
+commit ([#4](../../issues/4)), and that lives in the write flow, whose capability has
+not been discovered yet ([#3](../../issues/3)). What the three live runs in
+[`evidence/`](evidence/#the-escalation-runs) do instead — the second video above is one
+of them — is deny the recorded flow an action it needs: a human takes the display over
+noVNC, works in the agent's own session, and hands it back, with the target's own audit
+log showing both actors under one session id. That exercises the whole handoff, and one
+branch of the resume: a policy block is raised before a step runs, so resume skips the
+step the human did, where a runtime stuck signature re-attempts it. Both branches are
+covered by `tests_cua/test_escalation.py`; only the first has been run for real.
 
 What happens next, and what is deliberately not being built, is in
 **[ROADMAP.md](ROADMAP.md)**, tracked as [15 issues across three
@@ -436,7 +444,7 @@ cua/             the automation system
 mock_teller/     the hostile target surface (see its README)
 docker/          three services: target, workbench, dispatcher
 capabilities/    recorded artifacts, one file per version
-evidence/        the discovery run, five replays, frames, proxy audit
+evidence/        the discovery run, five replays, three handoffs, frames, proxy audit
 docs/media/      screenshots
 ```
 

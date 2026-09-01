@@ -1,0 +1,65 @@
+[
+  {
+    "seq": 1,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "nav",
+    "path": "/login",
+    "detail": "sign on as teller1",
+    "at": 1788173729.478
+  },
+  {
+    "seq": 2,
+    "session_id": "sess-0001",
+    "actor": "human",
+    "route": "control",
+    "path": "/_control/handoff",
+    "detail": "control transferred agent -> human",
+    "at": 1788173734.698
+  },
+  {
+    "seq": 3,
+    "session_id": "sess-0001",
+    "actor": "human",
+    "route": "search",
+    "path": "/members",
+    "detail": "by number 10001",
+    "at": 1788173747.513
+  },
+  {
+    "seq": 4,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "control",
+    "path": "/_control/handoff",
+    "detail": "control transferred human -> agent",
+    "at": 1788173756.818
+  },
+  {
+    "seq": 5,
+    "session_id": "sess-0001",
+    "actor": "human",
+    "route": "control",
+    "path": "/_control/handoff",
+    "detail": "control transferred agent -> human",
+    "at": 1788173758.533
+  },
+  {
+    "seq": 6,
+    "session_id": "sess-0001",
+    "actor": "human",
+    "route": "nav",
+    "path": "/members/10001",
+    "detail": "viewed 10001",
+    "at": 1788173785.808
+  },
+  {
+    "seq": 7,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "control",
+    "path": "/_control/handoff",
+    "detail": "control transferred human -> agent",
+    "at": 1788173788.681
+  }
+]

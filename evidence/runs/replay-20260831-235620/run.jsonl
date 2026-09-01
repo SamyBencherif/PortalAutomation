@@ -1,0 +1,9 @@
+{"t": 1788220580.369, "event": "run_started", "kind": "replay", "run_id": "replay-20260831-235620"}
+{"t": 1788220586.638, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788220586.658, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no"]}
+{"t": 1788220588.229, "event": "frame_captured", "file": "frames/001-step00-escalated.png", "label": "step00-escalated", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788220588.229, "event": "escalated", "step": 0, "code": "POLICY_BLOCKED", "reason": "action 'type' is not permitted"}
+{"t": 1788220588.244, "event": "intervention_raised", "id": "int-001", "code": "POLICY_BLOCKED", "step": 0, "reason": "action 'type' is not permitted", "vnc": "http://localhost:6080/vnc.html", "target_ack": true, "queued_as": "q-0001"}
+{"t": 1788220588.244, "event": "run_finished", "status": "escalated"}
+{"t": 1788220591.586, "event": "resume_refused", "id": "int-001", "queue_id": "q-0001", "held_by": "an operator on the queue"}
+{"t": 1788220708.739, "event": "resume_wait_finished", "resumed": false, "via": "queue"}

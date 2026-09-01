@@ -281,10 +281,15 @@ wants per-capability, per-tenant authorisation with an approver identity.
   `__VIEWSTATE` token is the interesting one — it would *prove* replay drives
   the UI rather than forging HTTP requests.
 
-**Unfinished rather than cut**: the escalation path end to end. Its mechanism is
-tested, but the live run needs the write flow, whose capability has not been
-discovered. Also: the container runs as root, so evidence it writes is
-root-owned on the host.
+**Unfinished rather than cut**: the escalation path against its *own* stuck
+state. The handoff runs end to end on the live surface — three runs are in
+`evidence/`, including one that hands off twice and one nobody answers — but
+they are forced by denying the recorded flow an action it needs. A policy block
+is raised before a step runs, so resume skips it; the
+`SUPERVISOR_OVERRIDE_REQUIRED` branch is raised on a screen the step could not
+get past and re-attempts it, and reaching that needs the write flow, whose
+capability has not been discovered. Also: the container runs as root, so
+evidence it writes is root-owned on the host.
 
 The loop itself is complete and in `evidence/`: Opus 5 found the flow in 9
 actions from screenshots alone, the recorder produced a 3-step artifact of
@@ -335,6 +340,6 @@ write-up would be dishonest without:
   answer presented as a right one is the worst thing a replay engine can do.
 
 **What I would do next, in order**: discover the write flow, which unlocks the
-escalation run; then per-tenant overrides; then a multi-run stability score, since replaying N times
+escalation path's own stuck state; then per-tenant overrides; then a multi-run stability score, since replaying N times
 and reporting flakiness is the cheapest way to earn trust in an artifact before
 letting it run unattended.

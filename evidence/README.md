@@ -50,7 +50,8 @@ That started as a response to a refusal and turned out to be the better design
 
 ## The replay runs
 
-All five replay the **discovered** artifact, with no model in the loop.
+All five below replay the **discovered** artifact, with no model in
+the loop.
 
 | Directory | Condition | Result |
 |---|---|---|
@@ -87,18 +88,25 @@ so a reviewer staring at a black rectangle can tell *withheld* from *absent*.
 ## The proxy log
 
 The strongest safety evidence in here, because it shows the allowlist catching
-things no application-level check would see. 124 requests were denied in this
-set, and almost none of them came from the automation:
+things no application-level check would see. Across every run in this
+directory, 737 requests were logged and **557 were denied** — and
+almost none of them came from the automation:
 
 | Denied | What it was |
 |---|---|
-| 76 | `CONNECT www.google.com:443` — Chromium's own connectivity probing |
-| 45 | `GET /favicon.ico` — off the allowlisted paths |
-| 3 | `CONNECT` to `optimizationguide-pa.googleapis.com`, `android.clients.google.com` |
+| 430 | `CONNECT` to `www.google.com`, `optimizationguide-pa.googleapis.com`, `accounts.google.com`, `android.clients.google.com`, `safebrowsing.googleapis.com`, `update.googleapis.com` — Chromium phoning home |
+| 120 | `GET /favicon.ico` — off the allowlisted paths |
+| 4 | `GET http://127.0.0.1:8888/` — the proxy asked about itself |
+| 3 | `GET /admin/members/10001/close` — the deny rule, doing its job |
 
 The browser phones home constantly, and none of it left the container. No
 application-level check would have seen any of these, because no application
 code initiated them.
+
+The last row is the only one the automation caused, and it is the guardrail
+demonstration from `MANUAL_TESTING.md` §4: an operator asked for a path
+`deny_paths` forbids and the proxy refused it three times, with the reason
+recorded as `path '/admin/members/10001/close' matches deny rule '/admin'`.
 
 
 ## Reading a target resolution
@@ -113,9 +121,62 @@ code initiated them.
 `absolute` is refused outright — a recorded coordinate identifies nothing, and
 acting on one produced a false success in testing (see `REPORT.md` §3).
 
+## The escalation runs
+
+Three more runs of the same read capability, with a human in the middle. The
+condition this machinery exists for — member `10005` demanding a supervisor
+override on an irreversible write — lives in the write flow, whose capability
+has not been discovered yet, so these deny the *recorded* flow an action it
+needs instead. Same path through `Policy.check_step` → `POLICY_BLOCKED` →
+`Broker`, and the same handoff, queue, resume and evidence.
+`MANUAL_TESTING.md` §6 walks it by hand.
+
+| Directory | Condition | Result |
+|---|---|---|
+| `replay-20260901-001848` | `type` denied; the operator types the member number | `success` in **2 steps**, `resumed_from: [0]` |
+| `replay-20260831-105509` | `click` denied; the operator clicks Find and opens the record | `success` in **1 step**, `resumed_from: [1, 2]` — two handoffs in one run |
+| `replay-20260831-235620` | `type` denied and nobody comes | `escalated` `POLICY_BLOCKED`, after waiting 120s |
+
+Three things to read in them:
+
+- `intervention_raised` carries `queued_as` — the queue's own id, which differs
+  from the run's, because two runs both numbering their interventions from 1
+  would collide on a shared list — and `target_ack: true`, meaning the
+  application was told control had moved before a human touched it.
+- `replay_resumed` carries the operator's note and
+  `step_delegated_to_operator: true`: the step was skipped because a human did
+  it, not because a gate was lifted. Hence two steps rather than three — for a
+  flow that escalates on an irreversible write, that is the difference between
+  one resumed step and a second pass over the write.
+- `resume_wait_finished` says `via: "queue"`, so control came back through the
+  cross-run dispatcher — whoever was on duty — rather than the console of the
+  terminal that launched the run. In `235620` the same event says
+  `resumed: false`: nobody came, the run gave up, and it says so rather than
+  reporting a result it does not have.
+
+Then `target_audit.json`, which this system does not write. From `001848`:
+
+```
+1 sess-0001 agent nav     sign on as teller1
+2 sess-0001 human control control transferred agent -> human
+3 sess-0001 human search  by number 10001
+4 sess-0001 agent control control transferred human -> agent
+5 sess-0001 agent search  by number 10001
+6 sess-0001 agent nav     viewed 10001
+```
+
+One session id throughout, with the actor changing partway down: the human
+worked in the agent's own session, not a copy of it. That is the handoff as a
+fact in someone else's log rather than a claim in ours. Row 3 is the operator's
+own search and row 5 is the automation redoing it on resume, which is what
+`resumed_from: [0]` means — the *typing* was delegated, the click after it was
+not.
+
 ## Not here
 
-The escalation run. It needs the write flow — opening a sub-account, which is
-where the supervisor-override stuck state lives — and that capability has not
-been discovered yet. The mechanism is tested in `tests_cua/test_escalation.py`;
-what is missing is an end-to-end run of it against the live surface.
+The stuck state the escalation path was built for. `POLICY_BLOCKED` is raised
+*before* a step runs, so resume skips it; a runtime signature like
+`SUPERVISOR_OVERRIDE_REQUIRED` is raised on a screen the step could not get past
+and so re-attempts it. Both branches are in `ReplayEngine.resume()` and both are
+covered in `tests_cua/test_escalation.py`, but only the first is reachable until
+the write flow is discovered.
