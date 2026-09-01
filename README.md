@@ -15,6 +15,20 @@ five replays, and [`capabilities/`](capabilities/) the artifact that sits betwee
 
 ---
 
+## Demonstrations
+
+### Computer Use Automation
+
+Here we are watching deterministic replay of an LLM-discovered user interface interaction.
+
+[computer-use-automation.webm](https://github.com/user-attachments/assets/7547f21b-718f-40e7-92c0-8f40fb60508f)
+
+### With Human Intervention
+
+Here I removed the replay engine's _typing_ capability, which is needed for searching. Now when it encounters something it cannot do it escalates to a human user. The handoff is straightforward in both directions.
+
+[cua-human-intervention.webm](https://github.com/user-attachments/assets/f0de1071-2f12-4f42-b479-c85b2d418f4d)
+
 ## What's different about this one
 
 Most solutions to this brief will be Playwright driving a headless Chrome on the host,
