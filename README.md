@@ -33,7 +33,7 @@ Here I removed the replay engine's _typing_ capability, which is needed for sear
 ## What's different about this one
 
 Most solutions to this brief will be Playwright driving a headless Chrome on the host,
-with CSS selectors as the locator strategy. That works, and it is the wrong shape for
+with CSS selectors as the locator strategy. That works, but it is the wrong shape for
 the environment the brief actually describes.
 
 **This one runs the agent inside an isolated sandbox and acts at the OS level — screen,
