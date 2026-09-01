@@ -1,0 +1,56 @@
+[
+  {
+    "seq": 1,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "nav",
+    "path": "/login",
+    "detail": "sign on as teller1",
+    "at": 1788221933.643
+  },
+  {
+    "seq": 2,
+    "session_id": "sess-0001",
+    "actor": "human",
+    "route": "control",
+    "path": "/_control/handoff",
+    "detail": "control transferred agent -> human",
+    "at": 1788221936.073
+  },
+  {
+    "seq": 3,
+    "session_id": "sess-0001",
+    "actor": "human",
+    "route": "search",
+    "path": "/members",
+    "detail": "by number 10001",
+    "at": 1788221952.598
+  },
+  {
+    "seq": 4,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "control",
+    "path": "/_control/handoff",
+    "detail": "control transferred human -> agent",
+    "at": 1788221964.211
+  },
+  {
+    "seq": 5,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "search",
+    "path": "/members",
+    "detail": "by number 10001",
+    "at": 1788221965.196
+  },
+  {
+    "seq": 6,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "nav",
+    "path": "/members/10001",
+    "detail": "viewed 10001",
+    "at": 1788221966.295
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "status": "escalated",
+  "capability": "member.read_savings_balance@1.0.0",
+  "run_id": "replay-20260831-235620",
+  "outputs": {},
+  "outcome": {
+    "code": "POLICY_BLOCKED",
+    "class": "stuck",
+    "message": "action 'type' is not permitted",
+    "step": 0,
+    "intent": "type '{member_no}' into the field beside 'Member Number'"
+  },
+  "failure": null,
+  "recovered": [],
+  "drift": [],
+  "steps_executed": 0,
+  "resumed_from": []
+}

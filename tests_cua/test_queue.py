@@ -223,6 +223,49 @@ def test_a_run_publishes_and_an_operator_works_the_queue(queue):
     assert seen["note"] == "entered SUP-4471"
 
 
+def _submit(client, page: str, action: str, **typed):
+    """Post a form the way the browser would: only what the page renders.
+
+    Every other test here supplies `operator` by hand, which is how the page
+    shipped with both buttons posting anonymously -- the name was set on a
+    separate form and only ever lived in the query string.
+    """
+    import re
+
+    form = re.search(rf'<form[^>]*action="{action}".*?</form>', page, re.S)
+    assert form, f"no {action} form on the page"
+    fields = dict(re.findall(r'name="([^"]+)" value="([^"]*)"', form.group(0)))
+    fields.update(typed)
+    return client.post(action, data=fields, follow_redirects=False)
+
+
+def test_the_rendered_buttons_carry_who_is_pressing_them(queue):
+    client = TestClient(build(queue))
+    item_id = client.post("/interventions", json=RAISED).json()["id"]
+
+    # Exactly what an operator does: set the name, then press the button on
+    # the page that comes back.
+    page = client.get("/", params={"operator": "sam"}).text
+    assert _submit(client, page, "/claim").status_code == 303
+    assert queue.get(item_id).claimed_by == "sam"
+
+    working = client.get("/", params={"operator": "sam"}).text
+    assert _submit(client, working, "/resume",
+                   note="entered SUP-4471").status_code == 303
+    handed = queue.get(item_id)
+    assert handed.resolved_by == "sam"
+    assert handed.note == "entered SUP-4471"
+
+
+def test_a_nameless_operator_is_still_refused_by_the_button(queue):
+    client = TestClient(build(queue))
+    item_id = client.post("/interventions", json=RAISED).json()["id"]
+
+    landed = _submit(client, client.get("/").text, "/claim")
+    assert "say+who+you+are" in landed.headers["location"]
+    assert queue.get(item_id).claimed_by == ""
+
+
 def test_an_operator_is_told_when_someone_else_holds_it(queue):
     client = TestClient(build(queue))
     item_id = client.post("/interventions", json=RAISED).json()["id"]
@@ -358,7 +401,8 @@ def test_a_run_survives_a_queue_that_is_not_there(log):
     assert broker.wait_for_resume(timeout=1.0) is True
 
 
-def test_local_console_cannot_resume_a_published_queue_item(dispatcher, log):
+def test_local_console_defers_to_an_operator_holding_the_item(dispatcher, log):
+    """Two doors onto one display, and somebody is already through the other."""
     broker = Broker(target_base="http://127.0.0.1:9", log=log,
                     dispatcher=dispatcher, poll_interval=0.1)
     req = broker.raise_intervention(RAISED)
@@ -371,6 +415,59 @@ def test_local_console_cannot_resume_a_published_queue_item(dispatcher, log):
     assert broker.resume(req.id, note="local handback") is False
     assert req.pending
     assert broker.controller == HUMAN
+
+    refused = next(e for e in log.events() if e["event"] == "resume_refused")
+    assert refused["held_by"] == "sam", "a run that stays blocked must say why"
+
+
+def test_local_console_answers_an_unclaimed_item_and_clears_it(dispatcher, log):
+    """The other half of the same rule, and the one that regressed.
+
+    Publishing to a queue must not disable the console the run is serving.
+    Nobody has claimed this, so whoever is at the terminal is the first
+    answer -- and the card has to leave the work list with them, or an operator
+    picks up a run that resumed minutes ago.
+    """
+    broker = Broker(target_base="http://127.0.0.1:9", log=log,
+                    dispatcher=dispatcher, poll_interval=0.1)
+    req = broker.raise_intervention(RAISED)
+    assert req.queue_id
+
+    assert broker.resume(req.id, note="typed the override at the terminal")
+    assert broker.controller == AGENT
+    assert req.operator_note == "typed the override at the terminal"
+
+    listed = httpx.get(f"{dispatcher}/state").json()
+    assert listed["open"] == [], "a card for a run that moved on is a trap"
+    withdrawn = next(i for i in listed["all"] if i["id"] == req.queue_id)
+    assert not withdrawn["pending"]
+    assert withdrawn["resolved_by"] == "", "no operator did this; none is named"
+
+
+def test_a_run_cannot_take_back_work_an_operator_holds(queue):
+    item = queue.add(RAISED)
+    queue.claim(item.id, "sam")
+
+    with pytest.raises(QueueError, match="being handled by sam"):
+        queue.withdraw(item.id)
+
+    assert queue.open == [item], "the operator keeps the display"
+
+
+def test_withdrawing_answers_the_run_rather_than_erroring(queue):
+    client = TestClient(build(queue))
+    item_id = client.post("/interventions", json=RAISED).json()["id"]
+
+    assert client.post("/interventions/q-9999/withdraw").status_code == 404
+
+    r = client.post(f"/interventions/{item_id}/withdraw",
+                    json={"note": "handed back on the run's own console"})
+    assert r.status_code == 200
+    assert r.json()["note"] == "handed back on the run's own console"
+
+    # Second time round somebody would have to be holding it, which is a
+    # conflict rather than a retry.
+    assert client.post(f"/interventions/{item_id}/withdraw").status_code == 409
 
 
 def test_local_console_recovers_after_dispatcher_forgets_item(log, monkeypatch):

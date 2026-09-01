@@ -19,7 +19,8 @@ The end-to-end loop, evidenced in [`evidence/`](evidence/):
   reachable by one command, and no randomness anywhere.
 - Screenshot-only perception: OCR with a three-tier locator chain, no DOM read anywhere.
 - LLM discovery (Opus 5, 9 actions) → recorded artifact (3 steps, all tier-1 anchors) →
-  deterministic replay across five conditions.
+  deterministic replay across five conditions, plus three more with a human in the
+  middle.
 - Four-way result contract: success / business outcome / escalated / failed.
 - Allowlist enforced at the network edge by a proxy; pixel redaction at the evidence
   boundary; two-gate approval for irreversible steps.
@@ -30,15 +31,19 @@ The end-to-end loop, evidenced in [`evidence/`](evidence/):
 - Reaching an operator who is not already watching: a cross-run queue that
   outlives any run, exclusive claiming under a named identity that reaches the
   run's evidence, and a webhook off the machine.
-- 153 tests.
+- Three live handoffs in `evidence/`, forced by policy: one resumed, one that
+  hands off twice, one nobody answers. The target's own audit log carries both
+  actors under a single session id.
+- 164 tests.
 
 ---
 
 ## M1 — Demonstrate what is already claimed
 
-Each of these is supported by code and by the target, and none has been run end to end.
-They are first because the gap between "the mechanism exists and is unit-tested" and
-"here is a run of it" is exactly the gap a reviewer is entitled to be sceptical about.
+Each of these is supported by code and by the target, and none has been run end to end
+under the condition it was designed for. They are first because the gap between "the
+mechanism exists and is unit-tested" and "here is a run of it" is exactly the gap a
+reviewer is entitled to be sceptical about.
 
 ### 1. Discover the write flow (`member.open_subaccount`)
 The read flow is discovered and replayed. The write flow is the interesting one: it is
@@ -46,12 +51,16 @@ irreversible, has a confirmation step, and is the precondition for almost everyt
 else in this milestone. Blocks items 2, 3 and 4.
 
 ### 2. Run the escalation path end to end
-The single acknowledged gap in `REPORT.md`. Member `10005` demands a supervisor
-override the agent cannot obtain, so escalation is the only correct move. Needs a live
-run: agent stalls → intervention raised with context → human takes the display over
-noVNC → enters `SUP-…` → control returns → run completes. The evidence that matters is
-the target's own audit log showing one continuous session with both actors.
-Depends on item 1.
+Half done, and the remaining half is the interesting one. The handoff itself is
+evidenced — three runs in `evidence/`, a human working the agent's live session over
+noVNC, the target's own audit log showing one continuous session with both actors — but
+all three are forced by denying the recorded read flow an action it needs. That raises
+`POLICY_BLOCKED` *before* a step runs, so resume skips the step on the assumption the
+human did it. Member `10005` demands a supervisor override the agent cannot obtain,
+which is raised on a screen the step could not get past, so resume re-attempts it
+instead: agent stalls → intervention raised with context → human enters `SUP-…` →
+control returns → the step runs again and completes. That branch has unit tests and no
+live run. Depends on item 1.
 
 ### 3. Exercise the native `window.confirm()` dialog
 The target raises a real browser dialog on the irreversible commit — deliberately a

@@ -97,13 +97,18 @@ ITEM = """<div class="card {css}">
   {action}
 </div>"""
 
+# The operator's name lives in the query string (see `_back`), which a form
+# post does not carry. It has to be resubmitted with the click or the claim
+# arrives anonymous and the queue refuses it.
 CLAIM = """<form method="post" action="/claim">
     <input type="hidden" name="item_id" value="{id}">
+    <input type="hidden" name="operator" value="{operator}">
     <button type="submit">Take this over</button>
   </form>"""
 
 WORKING = """<form method="post" action="/resume">
     <input type="hidden" name="item_id" value="{id}">
+    <input type="hidden" name="operator" value="{operator}">
     <label>What did you do? <input class="note" type="text" name="note"
       placeholder="e.g. entered supervisor override SUP-4471"></label>
     <button type="submit">Hand control back</button>
@@ -150,11 +155,28 @@ def build(queue: Queue) -> FastAPI:
             return JSONResponse({"error": "unknown intervention"}, status_code=404)
         return JSONResponse(item.to_dict())
 
+    @app.post("/interventions/{item_id}/withdraw")
+    def withdraw_one(item_id: str,
+                     payload: dict[str, Any] | None = None) -> JSONResponse:
+        """A run that was unblocked on its own console takes its item back.
+
+        409 rather than an error the run should retry: a claimed item is not a
+        transient condition, it is an operator standing at the display.
+        """
+        try:
+            item = queue.withdraw(item_id, (payload or {}).get("note"))
+        except QueueError as e:
+            unknown = "no such intervention" in str(e)
+            return JSONResponse({"error": str(e)},
+                                status_code=404 if unknown else 409)
+        return JSONResponse(item.to_dict())
+
     # ----------------------------------------------------- the operators
 
     @app.get("/", response_class=HTMLResponse)
     def index(operator: str = "", error: str = "") -> str:
         open_items = queue.open
+        escaped_operator = escape(operator, quote=True)
         cards = []
         for item in open_items:
             mine = item.claimed_by == operator and bool(operator)
@@ -166,10 +188,10 @@ def build(queue: Queue) -> FastAPI:
                 css="mine" if mine else ("held" if item.claimed else ""),
                 held=(f" &mdash; held by {escape(item.claimed_by)}"
                       if item.claimed else ""),
-                action=(WORKING if mine else CLAIM).format(**fields),
+                action=(WORKING if mine else CLAIM).format(
+                    operator=escaped_operator, **fields),
                 **fields,
             ))
-        escaped_operator = escape(operator, quote=True)
         return PAGE.format(
             style=STYLE, script=SCRIPT,
             title=(f"({len(open_items)}) Take over — Operator queue"

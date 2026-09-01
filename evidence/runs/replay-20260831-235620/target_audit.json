@@ -1,0 +1,20 @@
+[
+  {
+    "seq": 1,
+    "session_id": "sess-0001",
+    "actor": "agent",
+    "route": "nav",
+    "path": "/login",
+    "detail": "sign on as teller1",
+    "at": 1788220585.748
+  },
+  {
+    "seq": 2,
+    "session_id": "sess-0001",
+    "actor": "human",
+    "route": "control",
+    "path": "/_control/handoff",
+    "detail": "control transferred agent -> human",
+    "at": 1788220588.238
+  }
+]

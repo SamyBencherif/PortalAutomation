@@ -1,0 +1,23 @@
+{"t": 1788173709.002, "event": "run_started", "kind": "replay", "run_id": "replay-20260831-105509"}
+{"t": 1788173732.307, "event": "session_bootstrapped", "operator": "teller1"}
+{"t": 1788173732.336, "event": "replay_started", "capability": "member.read_savings_balance@1.0.0", "approval": "draft", "params": ["member_no"]}
+{"t": 1788173732.336, "event": "step_started", "index": 0, "intent": "type '{member_no}' into the field beside 'Member Number'", "action": "type", "risk": "sensitive"}
+{"t": 1788173733.075, "event": "target_resolved", "index": 0, "tier": "label", "detail": "text -> 'Member Number' @ 53,282"}
+{"t": 1788173734.688, "event": "frame_captured", "file": "frames/001-step01-escalated.png", "label": "step01-escalated", "size": [1600, 1000], "redacted_regions": 0}
+{"t": 1788173734.688, "event": "escalated", "step": 1, "code": "POLICY_BLOCKED", "reason": "action 'click' is not permitted"}
+{"t": 1788173734.703, "event": "intervention_raised", "id": "int-001", "code": "POLICY_BLOCKED", "step": 1, "reason": "action 'click' is not permitted", "vnc": "http://localhost:6080/vnc.html", "target_ack": true, "queued_as": "q-0001"}
+{"t": 1788173734.704, "event": "run_finished", "status": "escalated"}
+{"t": 1788173756.818, "event": "control_returned", "id": "int-001", "note": "clicked Find on the live display; policy blocks the agent from clicking", "operator": "samy", "held_for_s": 22.1}
+{"t": 1788173756.818, "event": "resume_wait_finished", "resumed": true, "via": "queue"}
+{"t": 1788173756.818, "event": "replay_resumed", "capability": "member.read_savings_balance@1.0.0", "escalated_at": 1, "code": "POLICY_BLOCKED", "step_delegated_to_operator": true, "resuming_at": 2, "operator_note": "clicked Find on the live display; policy blocks the agent from clicking"}
+{"t": 1788173758.524, "event": "frame_captured", "file": "frames/002-step02-escalated.png", "label": "step02-escalated", "size": [1600, 1000], "redacted_regions": 1}
+{"t": 1788173758.524, "event": "escalated", "step": 2, "code": "POLICY_BLOCKED", "reason": "action 'click' is not permitted"}
+{"t": 1788173758.538, "event": "intervention_raised", "id": "int-002", "code": "POLICY_BLOCKED", "step": 2, "reason": "action 'click' is not permitted", "vnc": "http://localhost:6080/vnc.html", "target_ack": true, "queued_as": "q-0002"}
+{"t": 1788173758.539, "event": "run_finished", "status": "escalated"}
+{"t": 1788173788.682, "event": "control_returned", "id": "int-002", "note": "opened the member record", "operator": "samy", "held_for_s": 30.1}
+{"t": 1788173788.682, "event": "resume_wait_finished", "resumed": true, "via": "queue"}
+{"t": 1788173788.682, "event": "replay_resumed", "capability": "member.read_savings_balance@1.0.0", "escalated_at": 2, "code": "POLICY_BLOCKED", "step_delegated_to_operator": true, "resuming_at": null, "operator_note": "opened the member record"}
+{"t": 1788173790.496, "event": "frame_captured", "file": "frames/003-final.png", "label": "final", "size": [1600, 1000], "redacted_regions": 4}
+{"t": 1788173790.496, "event": "output_extracted", "name": "savings_balance", "value": "4,182.55"}
+{"t": 1788173790.496, "event": "replay_succeeded", "outputs": ["savings_balance"]}
+{"t": 1788173790.497, "event": "run_finished", "status": "success"}
