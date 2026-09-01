@@ -188,6 +188,35 @@ class Queue:
             item.note = note
             return item
 
+    def withdraw(self, item_id: str, note: str | None = None
+                 ) -> QueuedIntervention:
+        """The run answers its own intervention somewhere else.
+
+        A run that publishes here still serves its own console, so one blocked
+        display has two doors. Whichever opens first has to close the other, or
+        this list keeps offering a card for a run that stopped waiting minutes
+        ago -- and the operator who takes it gets a display nobody needs them
+        at.
+
+        Refused once somebody holds it. They are the one at the display, and a
+        run does not get to overrule the person it asked for.
+        """
+        with self._lock:
+            item = self._items.get(item_id)
+            if item is None:
+                raise QueueError(f"no such intervention: {item_id}")
+            if not item.pending:
+                raise QueueError(f"{item_id} was already handed back")
+            if item.claimed:
+                raise QueueError(
+                    f"{item_id} is being handled by {item.claimed_by}")
+            # resolved_by stays empty on purpose: no operator did this, and a
+            # name invented here would be the one thing the evidence must not
+            # carry.
+            item.resolved_at = time.time()
+            item.note = note
+            return item
+
     # ------------------------------------------------------------- reading
 
     @property

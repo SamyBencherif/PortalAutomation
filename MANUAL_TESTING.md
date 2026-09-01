@@ -292,6 +292,13 @@ On <http://localhost:8090>:
    browser holding the agent's session cookie, not a copy.
 4. Fill in **What did you do?** and press **Hand control back**.
 
+Either door works and the first one through wins: this run also serves its own
+console on 8080, and handing back there withdraws the queue card so nobody picks
+up a run that has already moved on. The exception is an item somebody has
+claimed — then the console defers, because they are the one standing at the
+display, and the run logs `resume_refused` rather than staying blocked for
+reasons nobody can read.
+
 The bookkeeping is scriptable, from a second terminal, if you would rather see
 the seam than the page — the work still has to happen on the display:
 

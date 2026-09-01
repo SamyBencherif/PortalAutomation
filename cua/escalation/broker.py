@@ -232,15 +232,15 @@ class Broker:
         deadline = None if timeout is None else time.time() + timeout
         while True:
             if self._resume.wait(self.poll_interval):
-                # resume() only sets this after reconciling a published
-                # request with the dispatcher, so a local console cannot race
-                # an operator who is already working the queue item.
+                # Set only by _complete_resume, which runs after resume() has
+                # settled ownership with the queue -- so this cannot be a
+                # console handback that the queue would have refused.
                 return True
             for req in self.pending:
-                _, done = self._fetch(req)
-                if done is not None:
-                    self._complete_resume(req, note=done.get("note"),
-                                          operator=done.get("resolved_by", ""))
+                _, item = self._fetch(req)
+                if item is not None and not item.get("pending", True):
+                    self._complete_resume(req, note=item.get("note"),
+                                          operator=item.get("resolved_by", ""))
                     return True
             if deadline is not None and time.time() >= deadline:
                 return False
@@ -248,10 +248,12 @@ class Broker:
     def _fetch(
         self, req: InterventionRequest,
     ) -> tuple[bool, dict[str, Any] | None]:
-        """Return whether the queue retains a request and any resolution.
+        """Whether the queue still holds this request, and its view of it.
 
-        A failed lookup is treated conservatively as retained: only an
-        explicit 404 proves that the dispatcher no longer owns the request.
+        A failed lookup is treated conservatively as retained: only an explicit
+        404 proves that the dispatcher no longer owns the request. The item is
+        returned whether or not it has been handed back, because who is holding
+        a still-pending one decides whether the local console may answer it.
         """
         if self.dispatcher is None or req.queue_id is None:
             return False, None
@@ -262,28 +264,79 @@ class Broker:
                 return False, None
             if r.status_code != 200:
                 return True, None
-            item = r.json()
-            return True, None if item.get("pending", True) else item
+            return True, r.json()
         except (httpx.HTTPError, ValueError):
             return True, None
 
     def resume(self, request_id: str, note: str | None = None,
                operator: str = "") -> bool:
-        """The human hands control back."""
+        """The human hands control back.
+
+        A published intervention has two doors onto one display -- this run's
+        console and the shared queue -- and they must not both open. The queue
+        arbitrates, because it is the only party that can see both:
+
+        - it was already handed back there, so that record wins and this call
+          adopts the operator and note the queue recorded;
+        - somebody holds it, so this console is the second actor and is
+          refused; they are the one at the display;
+        - nobody holds it, so this console got there first, and the item is
+          withdrawn rather than left on a work list for a run that has moved
+          on.
+
+        A queue that cannot be reached decides nothing, and the console
+        proceeds. Refusing there would take down the last remaining route along
+        with the dispatcher, which is the exact situation a local console
+        exists for.
+        """
         req = self.requests.get(request_id)
         if req is None or not req.pending:
             return False
 
         if req.queue_id is not None:
-            retained, done = self._fetch(req)
-            if retained:
-                if done is None:
-                    return False
-                # The queue is authoritative once publication succeeds.
-                note = done.get("note")
-                operator = done.get("resolved_by", "")
+            retained, item = self._fetch(req)
+            if retained and item is not None:
+                if not item.get("pending", True):
+                    note = item.get("note")
+                    operator = item.get("resolved_by", "")
+                elif item.get("claimed_by"):
+                    return self._refuse(req, item.get("claimed_by", ""))
+                elif not self._withdraw(req, note):
+                    # Claimed between the look and the withdraw. The operator
+                    # who claimed it wins; they are already at the display.
+                    return self._refuse(req, "an operator on the queue")
 
         return self._complete_resume(req, note=note, operator=operator)
+
+    def _refuse(self, req: InterventionRequest, held_by: str) -> bool:
+        """Decline a console handback for an intervention someone else holds.
+
+        Logged rather than silent: a run that stayed blocked after somebody
+        pressed the button needs to say why, or the next person debugs the
+        handoff instead of reading it.
+        """
+        if self.log is not None:
+            self.log.event("resume_refused", id=req.id, queue_id=req.queue_id,
+                           held_by=held_by or None)
+        return False
+
+    def _withdraw(self, req: InterventionRequest, note: str | None) -> bool:
+        """Take an unclaimed request back off the queue, having answered here.
+
+        Best-effort in one direction only: a queue that cannot be reached is
+        one nobody is working either, so the console proceeds. A queue that
+        answers and says no is a person, and that answer is respected.
+        """
+        try:
+            r = httpx.post(
+                f"{self.dispatcher}/interventions/{req.queue_id}/withdraw",
+                json={"note": note or "handed back on the run's own console"},
+                headers={"content-type": "application/json"},
+                timeout=5.0,
+            )
+        except httpx.HTTPError:
+            return True
+        return r.status_code == 200
 
     def _complete_resume(self, req: InterventionRequest,
                          note: str | None = None, operator: str = "") -> bool:

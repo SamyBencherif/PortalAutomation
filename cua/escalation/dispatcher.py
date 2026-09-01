@@ -150,6 +150,22 @@ def build(queue: Queue) -> FastAPI:
             return JSONResponse({"error": "unknown intervention"}, status_code=404)
         return JSONResponse(item.to_dict())
 
+    @app.post("/interventions/{item_id}/withdraw")
+    def withdraw_one(item_id: str,
+                     payload: dict[str, Any] | None = None) -> JSONResponse:
+        """A run that was unblocked on its own console takes its item back.
+
+        409 rather than an error the run should retry: a claimed item is not a
+        transient condition, it is an operator standing at the display.
+        """
+        try:
+            item = queue.withdraw(item_id, (payload or {}).get("note"))
+        except QueueError as e:
+            unknown = "no such intervention" in str(e)
+            return JSONResponse({"error": str(e)},
+                                status_code=404 if unknown else 409)
+        return JSONResponse(item.to_dict())
+
     # ----------------------------------------------------- the operators
 
     @app.get("/", response_class=HTMLResponse)
